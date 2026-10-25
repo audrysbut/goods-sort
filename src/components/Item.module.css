@@ -1,8 +1,10 @@
 /* src/components/Item.module.css */
 
 .item {
-  width: 60px;
-  height: 60px;
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  min-height: 40px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -43,7 +45,7 @@
 }
 
 .itemLabel {
-  font-size: 28px;
+  font-size: 18px;
   line-height: 1;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
   pointer-events: none;

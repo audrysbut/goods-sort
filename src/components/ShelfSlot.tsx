@@ -72,6 +72,8 @@ export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
             isTopItem={index === 0}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
+            className={index > 0 ? styles.stackItem : ''}
+            style={index > 0 ? { '--stack-offset': index } : undefined}
           />
         ))}
       </div>

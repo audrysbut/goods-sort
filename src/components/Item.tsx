@@ -1,6 +1,6 @@
 // src/components/Item.tsx
 
-import { FunctionalComponent } from 'preact';
+import { FunctionalComponent, CSSProperties } from 'preact';
 import type { Item } from '../types/game';
 import { useDraggableItem } from '../hooks/useDragDrop';
 import { ITEM_COLORS, ITEM_LABELS } from '../types/game';
@@ -14,6 +14,7 @@ interface ItemProps {
   onDragStart: (source: { shelfId: string; slotIndex: number; item: Item }) => void;
   onDragEnd: () => void;
   className?: string;
+  style?: CSSProperties;
 }
 
 export const ItemComponent: FunctionalComponent<ItemProps> = ({
@@ -24,6 +25,7 @@ export const ItemComponent: FunctionalComponent<ItemProps> = ({
   onDragStart,
   onDragEnd,
   className = '',
+  style,
 }) => {
   const { isDragging, dragProps } = useDraggableItem(item, shelfId, slotIndex, onDragStart, onDragEnd);
   
@@ -48,6 +50,7 @@ export const ItemComponent: FunctionalComponent<ItemProps> = ({
         opacity: isDragging ? 0.5 : (isTopItem ? 1 : 0.3),
         transform: isDragging ? 'scale(1.1) rotate(3deg)' : 'none',
         zIndex: isDragging ? 1000 : (isTopItem ? 10 : 1),
+        ...style,
       }}
       aria-label={`Item: ${label} (${item.type})`}
       role={draggable ? 'button' : 'img'}

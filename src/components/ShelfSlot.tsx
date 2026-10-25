@@ -40,24 +40,15 @@ export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
 
   const slotClasses = [
     styles.slotContainer,
-    slot.hasFrontMatch ? styles.hasFrontMatch : '',
   ].filter(Boolean).join(' ');
 
   return (
     <div class={slotClasses} role="list" aria-label={`Slot ${slotIndex + 1} (3 cells, depth ${slot.depth})`}>
-      {/* Front layer match indicator */}
-      {slot.hasFrontMatch && (
-        <div class={styles.frontMatchIndicator} aria-label={`Front layer match: ${slot.matchType}! Will clear on next move.`}>
-          <span class={styles.matchIcon}>✓</span>
-          <span class={styles.matchText}>Front Layer Match: {slot.matchType}</span>
-        </div>
-      )}
-      
       <div class={styles.cellsContainer}>
         {cells.map((cell, cellIndex) => {
           const isDragTarget = dragPreview?.shelfId === shelfId && dragPreview?.slotIndex === slotIndex && dragPreview?.cellIndex === cellIndex;
           const canAccept = cell.canAccept;
-          const hasMatch = false; // Match is at slot level
+          const hasMatch = false;
           
           const handleDrop = (source: { shelfId: string; slotIndex: number; cellIndex: number; item: any }) => {
             onDrop(source, shelfId, slotIndex, cellIndex);

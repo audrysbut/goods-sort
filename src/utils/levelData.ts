@@ -22,18 +22,22 @@ const createShelf = (id: string, slots: [ShelfSlot, ShelfSlot, ShelfSlot]): Shel
   slots,
 });
 
-// Level 1: Hand-crafted, guaranteed solvable
+// Level 1: Multi-depth level for testing
 // 
-// Each shelf has 3 slots, each slot has depth layers (max 3)
-// Match rule: All 3 cells in a slot's front layer have same item type → clear that layer
+// Each slot has multiple depth layers (no front layer matches at start)
 // 
-// Layout:
 // Shelf 1:
-//   Slot 1: Layer 0: [🍎, 🍎, 🍎] (3 apples) → match!
-//   Slot 2: Layer 0: [🍌, 🍌, 🍌] (3 bananas) → match!
-//   Slot 3: Layer 0: [🍊, 🍊, 🍊] (3 oranges) → match!
-// Shelf 2: All empty
-// Shelf 3: All empty
+//   Slot 1: Depth 3 - Layer 0: [🍎, 🍌, 🍊] (mixed, no match)
+//                        Layer 1: [🍎, 🍌, 🍊] (mixed, no match)  
+//                        Layer 2: [🍎, 🍌, 🍊] (mixed, no match)
+//   Slot 2: Depth 2 - Layer 0: [🍌, 🍊, 🍇] (mixed)
+//                        Layer 1: [🍌, 🍊, 🍇] (mixed)
+//   Slot 3: Depth 1 - Layer 0: [🍊, 🍇, 🍓] (mixed)
+// Shelf 2: Empty for maneuvering
+// Shelf 3: Empty for maneuvering
+//
+// Total items: 3×3 + 2×3 + 1×3 = 18 items across 3 shelves
+// All item types appear 3+ times for solvability
 
 let itemCounter = 0;
 const nextId = (type: ItemType) => `${type}-${itemCounter++}`;
@@ -41,18 +45,26 @@ const nextId = (type: ItemType) => `${type}-${itemCounter++}`;
 const apple = () => ({ id: nextId('apple'), type: 'apple' as ItemType });
 const banana = () => ({ id: nextId('banana'), type: 'banana' as ItemType });
 const orange = () => ({ id: nextId('orange'), type: 'orange' as ItemType });
+const grape = () => ({ id: nextId('grape'), type: 'grape' as ItemType });
+const strawberry = () => ({ id: nextId('strawberry'), type: 'strawberry' as ItemType });
 
 export const level1: LevelData = {
   shelves: [
     createShelf('shelf-1', [
       createSlot(
-        createLayer([apple(), apple(), apple()])  // Layer 0: 3 apples
+        // Slot 1: Depth 3
+        createLayer([apple(), banana(), orange()]),      // Layer 0 (front): mixed
+        createLayer([apple(), banana(), orange()]),      // Layer 1: mixed
+        createLayer([apple(), banana(), orange()]),      // Layer 2 (back): mixed
       ),
       createSlot(
-        createLayer([banana(), banana(), banana()])  // Layer 0: 3 bananas
+        // Slot 2: Depth 2
+        createLayer([banana(), orange(), grape()]),      // Layer 0: mixed
+        createLayer([banana(), orange(), grape()]),      // Layer 1: mixed
       ),
       createSlot(
-        createLayer([orange(), orange(), orange()])  // Layer 0: 3 oranges
+        // Slot 3: Depth 1
+        createLayer([orange(), grape(), strawberry()]),  // Layer 0: mixed
       ),
     ]),
     createShelf('shelf-2', [
@@ -61,7 +73,7 @@ export const level1: LevelData = {
       createSlot(),
     ]),
     createShelf('shelf-3', [
-      createSlot(),
+      createSlot(),  // Empty slot
       createSlot(),
       createSlot(),
     ]),

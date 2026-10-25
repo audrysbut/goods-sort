@@ -42,7 +42,7 @@ test('can drag and drop item', async ({ page }) => {
   // Wait a bit
   await page.waitForTimeout(500);
   
-  // Check move count increased
-  const moveCount = page.locator('text=Moves').locator('..').locator('text=/^\\d+$/');
-  await expect(moveCount).toContainText('1');
+  // Check move count increased - use text content of the Moves stat
+  const moveCountText = page.locator('text=Moves').locator('..').locator('text=/^\\d+$/');
+  await expect(moveCountText).toContainText('1');
 });

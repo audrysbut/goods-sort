@@ -1,8 +1,9 @@
 /* src/components/ShelfSlot.module.css */
 
 .slot {
-  width: 70px;
-  height: 70px;
+  width: 90px;
+  height: 90px;
+  min-width: 90px;
   border-radius: 12px;
   background: linear-gradient(145deg, #f0f0f0 0%, #e0e0e0 100%);
   border: 2px dashed transparent;
@@ -21,6 +22,7 @@
     inset 0 2px 4px rgba(255, 255, 255, 0.5),
     inset 0 -2px 4px rgba(0, 0, 0, 0.05),
     0 2px 4px rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
 }
 
 .slot.canAccept {
@@ -79,11 +81,13 @@
 
 .stack {
   position: relative;
-  width: 60px;
-  height: 60px;
+  width: 70px;
+  height: 70px;
+  min-width: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 .stackItem {

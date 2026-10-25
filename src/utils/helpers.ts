@@ -45,46 +45,7 @@ export const checkSlotLayerMatch = (slot: ShelfSlot): ItemType | null => {
   return null;
 };
 
-/**
- * Find all slots that have a layer match
- */
-export const findSlotLayerMatches = (shelves: Shelf[]): Array<{ shelfId: string; slotIndex: number; itemType: ItemType }> => {
-  const matches: Array<{ shelfId: string; slotIndex: number; itemType: ItemType }> = [];
-  
-  for (const shelf of shelves) {
-    for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
-      const matchType = checkSlotLayerMatch(shelf.slots[slotIdx]);
-      if (matchType) {
-        matches.push({ shelfId: shelf.id, slotIndex: slotIdx, itemType: matchType });
-      }
-    }
-  }
-  
-  return matches;
-};
 
-/**
- * Clear matched layers (remove front item from all 3 cells in matched slots)
- */
-export const clearSlotLayerMatches = (shelves: Shelf[]): Shelf[] => {
-  const newShelves = cloneShelves(shelves);
-  
-  for (const shelf of newShelves) {
-    for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
-      const matchType = checkSlotLayerMatch(shelf.slots[slotIdx]);
-      if (matchType) {
-        // Remove front item from all 3 cells
-        shelf.slots[slotIdx].cells.forEach(cell => {
-          if (cell.items.length > 0) {
-            cell.items.shift();
-          }
-        });
-      }
-    }
-  }
-  
-  return newShelves;
-};
 
 /**
  * Check if all shelves are empty (win condition)
@@ -181,6 +142,7 @@ export const moveItem = (
 
 /**
  * Process a move and check for slot layer matches/clears
+ * Only checks target slot for new matches (not source slot)
  * Returns { shelves, isWon }
  */
 export const processMove = (
@@ -196,17 +158,31 @@ export const processMove = (
   const newShelves = moveItem(shelves, fromShelfId, fromSlotIndex, fromCellIndex, toShelfId, toSlotIndex, toCellIndex);
   if (!newShelves) return null;
   
-  // Check for slot layer matches and clear them
-  const matches = findSlotLayerMatches(newShelves);
+  // Check for layer match ONLY on the target slot (where item was dropped)
+  // Don't clear matches on source slot - user just moved an item away from it
+  const targetShelf = newShelves.find(s => s.id === toShelfId);
+  if (!targetShelf) return { shelves: newShelves, isWon: checkWin(newShelves) };
   
-  if (matches.length > 0) {
-    const clearedShelves = clearSlotLayerMatches(newShelves);
-    const isWon = checkWin(clearedShelves);
-    return { shelves: clearedShelves, isWon };
+  const targetSlot = targetShelf.slots[toSlotIndex];
+  const matchType = checkSlotLayerMatch(targetSlot);
+  
+  let finalShelves = newShelves;
+  
+  if (matchType) {
+    // Clear the matched layer on target slot only
+    finalShelves = cloneShelves(newShelves);
+    const finalTargetShelf = finalShelves.find(s => s.id === toShelfId);
+    if (finalTargetShelf) {
+      finalTargetShelf.slots[toSlotIndex].cells.forEach(cell => {
+        if (cell.items.length > 0) {
+          cell.items.shift();
+        }
+      });
+    }
   }
   
-  const isWon = checkWin(newShelves);
-  return { shelves: newShelves, isWon };
+  const isWon = checkWin(finalShelves);
+  return { shelves: finalShelves, isWon };
 };
 
 /**

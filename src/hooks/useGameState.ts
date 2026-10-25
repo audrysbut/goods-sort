@@ -1,7 +1,7 @@
 // src/hooks/useGameState.ts
 
 import { useState, useCallback, useMemo } from 'preact/hooks';
-import type { LevelData, Shelf, Item, DragSource, ShelfSlot } from '../types/game';
+import type { LevelData, Shelf, Item, DragSource, SlotCell } from '../types/game';
 import { level1 } from '../utils/levelData';
 import { 
   processMove, 
@@ -9,12 +9,16 @@ import {
   getTopItem 
 } from '../utils/helpers';
 
-interface ShelfSlotWithMeta extends ShelfSlot {
+interface SlotCellWithMeta extends SlotCell {
   topItem: Item | null;
   itemCount: number;
   canAccept: boolean;
   isDragTarget: boolean;
   hasMatch: boolean;
+}
+
+interface ShelfSlotWithMeta {
+  cells: [SlotCellWithMeta, SlotCellWithMeta, SlotCellWithMeta];
 }
 
 interface ShelfWithMeta {
@@ -27,11 +31,11 @@ interface UseGameStateReturn {
   isGameWon: boolean;
   moveCount: number;
   canUndo: boolean;
-  dragPreview: { shelfId: string; slotIndex: number } | null;
+  dragPreview: { shelfId: string; slotIndex: number; cellIndex: number } | null;
   
   handleDragStart: (source: DragSource) => void;
-  handleDrop: (source: DragSource, targetShelfId: string, targetSlotIndex: number) => void;
-  handleDragOver: (shelfId: string, slotIndex: number) => void;
+  handleDrop: (source: DragSource, targetShelfId: string, targetSlotIndex: number, targetCellIndex: number) => void;
+  handleDragOver: (shelfId: string, slotIndex: number, cellIndex: number) => void;
   handleDragLeave: () => void;
   handleDragEnd: () => void;
   resetGame: () => void;
@@ -43,21 +47,21 @@ export const useGameState = (initialLevel: LevelData = level1): UseGameStateRetu
   const [isGameWon, setIsGameWon] = useState(false);
   const [moveCount, setMoveCount] = useState(0);
   const [history, setHistory] = useState<Shelf[][]>([initialLevel.shelves]);
-  const [dragPreview, setDragPreview] = useState<{ shelfId: string; slotIndex: number } | null>(null);
+  const [dragPreview, setDragPreview] = useState<{ shelfId: string; slotIndex: number; cellIndex: number } | null>(null);
 
-  const canDrop = useCallback((shelfId: string, slotIndex: number): boolean => {
+  const canDrop = useCallback((shelfId: string, slotIndex: number, cellIndex: number): boolean => {
     const shelf = shelves.find(s => s.id === shelfId);
     if (!shelf) return false;
-    return canAcceptItem(shelf.slots[slotIndex]);
+    return canAcceptItem(shelf.slots[slotIndex].cells[cellIndex]);
   }, [shelves]);
 
   const handleDragStart = useCallback((_source: DragSource) => {
     // Drag started - preview handled by dragOver
   }, []);
 
-  const handleDragOver = useCallback((shelfId: string, slotIndex: number) => {
-    if (canDrop(shelfId, slotIndex)) {
-      setDragPreview({ shelfId, slotIndex });
+  const handleDragOver = useCallback((shelfId: string, slotIndex: number, cellIndex: number) => {
+    if (canDrop(shelfId, slotIndex, cellIndex)) {
+      setDragPreview({ shelfId, slotIndex, cellIndex });
     }
   }, [canDrop]);
 
@@ -68,22 +72,25 @@ export const useGameState = (initialLevel: LevelData = level1): UseGameStateRetu
   const handleDrop = useCallback((
     source: DragSource, 
     targetShelfId: string, 
-    targetSlotIndex: number
+    targetSlotIndex: number,
+    targetCellIndex: number
   ) => {
     const targetShelf = shelves.find(s => s.id === targetShelfId);
     if (!targetShelf) return;
     
-    const targetSlot = targetShelf.slots[targetSlotIndex];
-    if (!canAcceptItem(targetSlot)) return;
+    const targetCell = targetShelf.slots[targetSlotIndex].cells[targetCellIndex];
+    if (!canAcceptItem(targetCell)) return;
     
-    if (source.shelfId === targetShelfId && source.slotIndex === targetSlotIndex) return;
+    if (source.shelfId === targetShelfId && source.slotIndex === targetSlotIndex && source.cellIndex === targetCellIndex) return;
     
     const result = processMove(
       shelves,
       source.shelfId,
       source.slotIndex,
+      source.cellIndex,
       targetShelfId,
-      targetSlotIndex
+      targetSlotIndex,
+      targetCellIndex
     );
     
     if (!result) return;
@@ -124,23 +131,21 @@ export const useGameState = (initialLevel: LevelData = level1): UseGameStateRetu
     setIsGameWon(false);
   }, [history]);
 
-  const enhanceSlot = (slot: ShelfSlot, shelfId: string, index: number): ShelfSlotWithMeta => ({
-    ...slot,
-    topItem: getTopItem(slot),
-    itemCount: slot.items.length,
-    canAccept: canAcceptItem(slot),
-    isDragTarget: dragPreview?.shelfId === shelfId && dragPreview?.slotIndex === index,
-    hasMatch: slot.items.length === 3 && 
-              slot.items.every(item => item.type === slot.items[0].type),
+  const enhanceCell = (cell: SlotCell, shelfId: string, slotIndex: number, cellIndex: number): SlotCellWithMeta => ({
+    ...cell,
+    topItem: getTopItem(cell),
+    itemCount: cell.items.length,
+    canAccept: canAcceptItem(cell),
+    isDragTarget: dragPreview?.shelfId === shelfId && dragPreview?.slotIndex === slotIndex && dragPreview?.cellIndex === cellIndex,
+    hasMatch: cell.items.length === 3 && 
+              cell.items.every(item => item.type === cell.items[0].type),
   });
 
   const shelfData = useMemo(() => shelves.map(shelf => ({
     ...shelf,
-    slots: [
-      enhanceSlot(shelf.slots[0], shelf.id, 0),
-      enhanceSlot(shelf.slots[1], shelf.id, 1),
-      enhanceSlot(shelf.slots[2], shelf.id, 2),
-    ] as [ShelfSlotWithMeta, ShelfSlotWithMeta, ShelfSlotWithMeta]
+    slots: shelf.slots.map((slot, slotIdx) => ({
+      cells: slot.cells.map((cell, cellIdx) => enhanceCell(cell, shelf.id, slotIdx, cellIdx))
+    })) as [ShelfSlotWithMeta, ShelfSlotWithMeta, ShelfSlotWithMeta]
   })), [shelves, dragPreview]);
 
   return {

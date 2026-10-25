@@ -10,8 +10,9 @@ interface ItemProps {
   item: Item;
   shelfId: string;
   slotIndex: number;
+  cellIndex: number;
   isTopItem?: boolean;
-  onDragStart: (source: { shelfId: string; slotIndex: number; item: Item }) => void;
+  onDragStart: (source: { shelfId: string; slotIndex: number; cellIndex: number; item: Item }) => void;
   onDragEnd: () => void;
   className?: string;
   style?: CSSProperties;
@@ -21,13 +22,14 @@ export const ItemComponent: FunctionalComponent<ItemProps> = ({
   item,
   shelfId,
   slotIndex,
+  cellIndex,
   isTopItem = true,
   onDragStart,
   onDragEnd,
   className = '',
   style,
 }) => {
-  const { isDragging, dragProps } = useDraggableItem(item, shelfId, slotIndex, onDragStart, onDragEnd);
+  const { isDragging, dragProps } = useDraggableItem(item, shelfId, slotIndex, cellIndex, onDragStart, onDragEnd);
   
   const color = ITEM_COLORS[item.type];
   const label = ITEM_LABELS[item.type];

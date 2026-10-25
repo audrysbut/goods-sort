@@ -15,8 +15,15 @@ export interface Item {
   type: ItemType;
 }
 
-export interface ShelfSlot {
+// Cell = one of 3 horizontal positions within a slot
+// Each cell has vertical depth (stack)
+export interface SlotCell {
   items: Item[];  // Stack of items, items[0] = front/top
+}
+
+// ShelfSlot = 3 horizontal cells
+export interface ShelfSlot {
+  cells: [SlotCell, SlotCell, SlotCell];  // Exactly 3 cells per slot
 }
 
 export interface Shelf {
@@ -27,7 +34,7 @@ export interface Shelf {
 export interface GameState {
   shelves: Shelf[];
   draggedItem: Item | null;
-  draggedFrom: { shelfId: string; slotIndex: number } | null;
+  draggedFrom: { shelfId: string; slotIndex: number; cellIndex: number } | null;
   isGameWon: boolean;
   moveCount: number;
 }
@@ -39,6 +46,7 @@ export interface LevelData {
 export type DragSource = {
   shelfId: string;
   slotIndex: number;
+  cellIndex: number;
   item: Item;
 };
 

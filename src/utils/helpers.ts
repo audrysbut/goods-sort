@@ -1,6 +1,6 @@
 // src/utils/helpers.ts
 
-import type { Item, ItemType, Shelf, ShelfSlot, LevelData } from '../types/game';
+import type { Item, ItemType, Shelf, ShelfSlot, SlotCell, LevelData } from '../types/game';
 
 /**
  * Generate a unique ID
@@ -23,31 +23,35 @@ export const createItem = (type: ItemType): Item => ({
 export const cloneShelves = (shelves: Shelf[]): Shelf[] => {
   return shelves.map(shelf => ({
     ...shelf,
-    slots: shelf.slots.map(slot => ({
-      items: [...slot.items]
-    })) as [ShelfSlot, ShelfSlot, ShelfSlot]
+    slots: [
+      { cells: [...shelf.slots[0].cells.map(cell => ({ items: [...cell.items] }))] as [SlotCell, SlotCell, SlotCell] },
+      { cells: [...shelf.slots[1].cells.map(cell => ({ items: [...cell.items] }))] as [SlotCell, SlotCell, SlotCell] },
+      { cells: [...shelf.slots[2].cells.map(cell => ({ items: [...cell.items] }))] as [SlotCell, SlotCell, SlotCell] },
+    ] as [ShelfSlot, ShelfSlot, ShelfSlot]
   }));
 };
 
 /**
- * Check if a slot has 3 identical items (match-3)
+ * Check if a cell has 3 identical items (match-3)
  */
-export const checkMatch = (slot: ShelfSlot): boolean => {
-  if (slot.items.length !== 3) return false;
-  const firstType = slot.items[0].type;
-  return slot.items.every(item => item.type === firstType);
+export const checkMatch = (cell: SlotCell): boolean => {
+  if (cell.items.length !== 3) return false;
+  const firstType = cell.items[0].type;
+  return cell.items.every(item => item.type === firstType);
 };
 
 /**
- * Find all slots that have a match (3 identical items)
+ * Find all cells that have a match (3 identical items)
  */
-export const findMatches = (shelves: Shelf[]): Array<{ shelfId: string; slotIndex: number }> => {
-  const matches: Array<{ shelfId: string; slotIndex: number }> = [];
+export const findMatches = (shelves: Shelf[]): Array<{ shelfId: string; slotIndex: number; cellIndex: number }> => {
+  const matches: Array<{ shelfId: string; slotIndex: number; cellIndex: number }> = [];
   
   for (const shelf of shelves) {
-    for (let i = 0; i < 3; i++) {
-      if (checkMatch(shelf.slots[i])) {
-        matches.push({ shelfId: shelf.id, slotIndex: i });
+    for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
+      for (let cellIdx = 0; cellIdx < 3; cellIdx++) {
+        if (checkMatch(shelf.slots[slotIdx].cells[cellIdx])) {
+          matches.push({ shelfId: shelf.id, slotIndex: slotIdx, cellIndex: cellIdx });
+        }
       }
     }
   }
@@ -56,15 +60,17 @@ export const findMatches = (shelves: Shelf[]): Array<{ shelfId: string; slotInde
 };
 
 /**
- * Clear matched slots (remove all items from matched slots)
+ * Clear matched cells (remove all items from matched cells)
  */
 export const clearMatches = (shelves: Shelf[]): Shelf[] => {
   const newShelves = cloneShelves(shelves);
   
   for (const shelf of newShelves) {
-    for (let i = 0; i < 3; i++) {
-      if (checkMatch(shelf.slots[i])) {
-        shelf.slots[i].items = [];
+    for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
+      for (let cellIdx = 0; cellIdx < 3; cellIdx++) {
+        if (checkMatch(shelf.slots[slotIdx].cells[cellIdx])) {
+          shelf.slots[slotIdx].cells[cellIdx].items = [];
+        }
       }
     }
   }
@@ -77,95 +83,112 @@ export const clearMatches = (shelves: Shelf[]): Shelf[] => {
  */
 export const checkWin = (shelves: Shelf[]): boolean => {
   return shelves.every(shelf => 
-    shelf.slots.every(slot => slot.items.length === 0)
+    shelf.slots.every(slot => 
+      slot.cells.every(cell => cell.items.length === 0)
+    )
   );
 };
 
 /**
- * Check if a slot can accept more items (has space)
+ * Check if a cell can accept more items (has space)
  */
-export const canAcceptItem = (slot: ShelfSlot): boolean => {
-  return slot.items.length < 3;
+export const canAcceptItem = (cell: SlotCell): boolean => {
+  return cell.items.length < 3;
 };
 
 /**
- * Get the top (front) item of a slot
+ * Get the top (front) item of a cell
  */
-export const getTopItem = (slot: ShelfSlot): Item | null => {
-  return slot.items.length > 0 ? slot.items[0] : null;
+export const getTopItem = (cell: SlotCell): Item | null => {
+  return cell.items.length > 0 ? cell.items[0] : null;
 };
 
 /**
- * Remove top item from a slot
+ * Remove top item from a cell
  */
-export const removeTopItem = (slot: ShelfSlot): Item | null => {
-  if (slot.items.length === 0) return null;
-  return slot.items.shift() ?? null;
+export const removeTopItem = (cell: SlotCell): Item | null => {
+  if (cell.items.length === 0) return null;
+  return cell.items.shift() ?? null;
 };
 
 /**
- * Add item to front of slot
+ * Add item to front of cell
  */
-export const addItemToFront = (slot: ShelfSlot, item: Item): boolean => {
-  if (slot.items.length >= 3) return false;
-  slot.items.unshift(item);
+export const addItemToFront = (cell: SlotCell, item: Item): boolean => {
+  if (cell.items.length >= 3) return false;
+  cell.items.unshift(item);
   return true;
 };
 
 /**
- * Move item from one slot to another
+ * Move item from one cell to another
  * Returns new shelves array if move is valid, null otherwise
  */
 export const moveItem = (
   shelves: Shelf[],
   fromShelfId: string,
   fromSlotIndex: number,
+  fromCellIndex: number,
   toShelfId: string,
-  toSlotIndex: number
+  toSlotIndex: number,
+  toCellIndex: number
 ): Shelf[] | null => {
+  // Find source shelf and slot
   const fromShelfIndex = shelves.findIndex(s => s.id === fromShelfId);
   if (fromShelfIndex === -1) return null;
   
   const fromShelf = shelves[fromShelfIndex];
-  const fromSlot = fromShelf.slots[fromSlotIndex];
+  const fromCell = fromShelf.slots[fromSlotIndex].cells[fromCellIndex];
   
-  const item = getTopItem(fromSlot);
+  // Check if there's an item to move
+  const item = getTopItem(fromCell);
   if (!item) return null;
   
+  // Find target shelf and slot
   const toShelfIndex = shelves.findIndex(s => s.id === toShelfId);
   if (toShelfIndex === -1) return null;
   
   const toShelf = shelves[toShelfIndex];
-  const toSlot = toShelf.slots[toSlotIndex];
+  const toCell = toShelf.slots[toSlotIndex].cells[toCellIndex];
   
-  if (!canAcceptItem(toSlot)) return null;
+  // Check if target has space
+  if (!canAcceptItem(toCell)) return null;
   
-  if (fromShelfId === toShelfId && fromSlotIndex === toSlotIndex) return null;
+  // Don't allow moving to the same cell
+  if (fromShelfId === toShelfId && fromSlotIndex === toSlotIndex && fromCellIndex === toCellIndex) return null;
   
+  // Perform the move
   const newShelves = cloneShelves(shelves);
   const newFromShelf = newShelves[fromShelfIndex];
   const newToShelf = newShelves[toShelfIndex];
   
-  removeTopItem(newFromShelf.slots[fromSlotIndex]);
-  addItemToFront(newToShelf.slots[toSlotIndex], item);
+  // Remove from source
+  removeTopItem(newFromShelf.slots[fromSlotIndex].cells[fromCellIndex]);
+  
+  // Add to target
+  addItemToFront(newToShelf.slots[toSlotIndex].cells[toCellIndex], item);
   
   return newShelves;
 };
 
 /**
  * Process a move and check for matches/clears
- * Returns { shelves, didClear, isWon }
+ * Returns { shelves, isWon }
  */
 export const processMove = (
   shelves: Shelf[],
   fromShelfId: string,
   fromSlotIndex: number,
+  fromCellIndex: number,
   toShelfId: string,
-  toSlotIndex: number
+  toSlotIndex: number,
+  toCellIndex: number
 ): { shelves: Shelf[]; isWon: boolean } | null => {
-  const newShelves = moveItem(shelves, fromShelfId, fromSlotIndex, toShelfId, toSlotIndex);
+  // Perform the move
+  const newShelves = moveItem(shelves, fromShelfId, fromSlotIndex, fromCellIndex, toShelfId, toSlotIndex, toCellIndex);
   if (!newShelves) return null;
   
+  // Check for matches and clear them
   const matches = findMatches(newShelves);
   
   if (matches.length > 0) {
@@ -195,8 +218,10 @@ export const countItemTypes = (shelves: Shelf[]): Record<ItemType, number> => {
   
   for (const shelf of shelves) {
     for (const slot of shelf.slots) {
-      for (const item of slot.items) {
-        counts[item.type]++;
+      for (const cell of slot.cells) {
+        for (const item of cell.items) {
+          counts[item.type]++;
+        }
       }
     }
   }
@@ -205,24 +230,12 @@ export const countItemTypes = (shelves: Shelf[]): Record<ItemType, number> => {
 };
 
 /**
- * Check if level is solvable (each item type appears in multiples of 3, or can be maneuvered)
+ * Check if level is solvable
  */
 export const isLevelSolvable = (level: LevelData): boolean => {
   const counts = countItemTypes(level.shelves);
   
-  let hasEmptySlot = false;
-  for (const shelf of level.shelves) {
-    for (const slot of shelf.slots) {
-      if (slot.items.length === 0) {
-        hasEmptySlot = true;
-        break;
-      }
-    }
-    if (hasEmptySlot) break;
-  }
-  
-  if (!hasEmptySlot) return false;
-  
+  // Check that we have at least some items that can form triples
   const clearableTypes = Object.entries(counts).filter(([, count]) => count >= 3);
   return clearableTypes.length > 0;
 };

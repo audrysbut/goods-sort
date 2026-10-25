@@ -5,7 +5,7 @@ import type { Item, DragSource } from '../types/game';
 
 interface UseDragDropOptions {
   onDragStart?: (source: DragSource) => void;
-  onDrop?: (source: DragSource, targetShelfId: string, targetSlotIndex: number) => void;
+  onDrop?: (source: DragSource, targetShelfId: string, targetSlotIndex: number, targetCellIndex: number) => void;
   onDragEnd?: () => void;
 }
 
@@ -13,19 +13,19 @@ interface UseDragDropReturn {
   draggedItem: Item | null;
   draggedFrom: DragSource | null;
   isDragging: boolean;
-  dragOverTarget: { shelfId: string; slotIndex: number } | null;
+  dragOverTarget: { shelfId: string; slotIndex: number; cellIndex: number } | null;
   
   handleDragStart: (e: DragEvent, source: DragSource) => void;
-  handleDragOver: (e: DragEvent, shelfId: string, slotIndex: number) => void;
+  handleDragOver: (e: DragEvent, shelfId: string, slotIndex: number, cellIndex: number) => void;
   handleDragLeave: (e: DragEvent) => void;
-  handleDrop: (e: DragEvent, shelfId: string, slotIndex: number) => void;
+  handleDrop: (e: DragEvent, shelfId: string, slotIndex: number, cellIndex: number) => void;
   handleDragEnd: (e: DragEvent) => void;
 }
 
 export const useDragDrop = (options: UseDragDropOptions = {}): UseDragDropReturn => {
   const [draggedItem, setDraggedItem] = useState<Item | null>(null);
   const [draggedFrom, setDraggedFrom] = useState<DragSource | null>(null);
-  const [dragOverTarget, setDragOverTarget] = useState<{ shelfId: string; slotIndex: number } | null>(null);
+  const [dragOverTarget, setDragOverTarget] = useState<{ shelfId: string; slotIndex: number; cellIndex: number } | null>(null);
   
   const isDragging = draggedItem !== null;
   
@@ -42,31 +42,31 @@ export const useDragDrop = (options: UseDragDropOptions = {}): UseDragDropReturn
     optionsRef.current.onDragStart?.(source);
   }, []);
 
-  const handleDragOver = useCallback((e: DragEvent, shelfId: string, slotIndex: number) => {
+  const handleDragOver = useCallback((e: DragEvent, shelfId: string, slotIndex: number, cellIndex: number) => {
     if (!e.dataTransfer) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    setDragOverTarget({ shelfId, slotIndex });
+    setDragOverTarget({ shelfId, slotIndex, cellIndex });
   }, []);
 
   const handleDragLeave = useCallback((_e: DragEvent) => {
     // Could clear dragOverTarget here if needed
   }, []);
 
-  const handleDrop = useCallback((e: DragEvent, shelfId: string, slotIndex: number) => {
+  const handleDrop = useCallback((e: DragEvent, shelfId: string, slotIndex: number, cellIndex: number) => {
     if (!e.dataTransfer) return;
     e.preventDefault();
     
     if (!draggedFrom) return;
     
-    if (draggedFrom.shelfId === shelfId && draggedFrom.slotIndex === slotIndex) {
+    if (draggedFrom.shelfId === shelfId && draggedFrom.slotIndex === slotIndex && draggedFrom.cellIndex === cellIndex) {
       setDraggedItem(null);
       setDraggedFrom(null);
       setDragOverTarget(null);
       return;
     }
     
-    optionsRef.current.onDrop?.(draggedFrom, shelfId, slotIndex);
+    optionsRef.current.onDrop?.(draggedFrom, shelfId, slotIndex, cellIndex);
     
     setDraggedItem(null);
     setDraggedFrom(null);
@@ -103,6 +103,7 @@ interface UseShelfSlotDropReturn {
 export const useShelfSlotDrop = (
   _shelfId: string,
   _slotIndex: number,
+  _cellIndex: number,
   onDrop: (source: DragSource) => void,
   canAccept: boolean
 ): UseShelfSlotDropReturn => {
@@ -163,6 +164,7 @@ export const useDraggableItem = (
   item: Item,
   shelfId: string,
   slotIndex: number,
+  cellIndex: number,
   onDragStart?: (source: DragSource) => void,
   onDragEnd?: () => void
 ): UseDraggableItemReturn => {
@@ -170,14 +172,14 @@ export const useDraggableItem = (
 
   const handleDragStart = useCallback((e: DragEvent) => {
     if (!e.dataTransfer) return;
-    const source: DragSource = { shelfId, slotIndex, item };
+    const source: DragSource = { shelfId, slotIndex, cellIndex, item };
     
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', JSON.stringify(source));
     
     setIsDragging(true);
     onDragStart?.(source);
-  }, [shelfId, slotIndex, item, onDragStart]);
+  }, [shelfId, slotIndex, cellIndex, item, onDragStart]);
 
   const handleDragEnd = useCallback((_e: DragEvent) => {
     setIsDragging(false);

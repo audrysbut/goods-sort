@@ -1,13 +1,19 @@
 // src/components/SlotCell.tsx
 
 import { FunctionalComponent } from 'preact';
-import type { SlotCell } from '../types/game';
 import { useShelfSlotDrop } from '../hooks/useDragDrop';
 import { ItemComponent } from './Item';
 import styles from './SlotCell.module.css';
 
 interface SlotCellProps {
-  cell: SlotCell;
+  cell: {
+    frontItem: any;
+    canAccept: boolean;
+    isDragTarget: boolean;
+    hasFrontMatch: boolean;
+    nextItem: any;
+    itemCount: number;
+  };
   shelfId: string;
   slotIndex: number;
   cellIndex: number;
@@ -39,9 +45,9 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
     canAccept
   );
 
-  const items = cell.items;
-  const itemCount = items.length;
-  const hiddenCount = Math.max(0, itemCount - 3);
+  const frontItem = cell.frontItem;
+  const itemCount = cell.itemCount;
+  const hiddenCount = Math.max(0, itemCount - 1);
 
   const cellClasses = [
     styles.cell,
@@ -49,7 +55,7 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
     isDragOver && canAccept ? styles.dragOver : '',
     isDragTarget ? styles.dragTarget : '',
     hasMatch ? styles.hasMatch : '',
-    itemCount === 0 ? styles.empty : '',
+    !frontItem ? styles.empty : '',
   ].filter(Boolean).join(' ');
 
   return (
@@ -59,27 +65,39 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       role="button"
-      aria-label={itemCount === 0 
+      aria-label={!frontItem 
         ? `Cell ${cellIndex + 1} empty` 
         : `Cell ${cellIndex + 1} with ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
       aria-dropeffect={canAccept ? 'move' : 'none'}
       tabIndex={canAccept ? 0 : -1}
     >
       <div class={styles.stack}>
-        {items.map((item, index) => (
+        {frontItem && (
           <ItemComponent
-            key={item.id}
-            item={item}
+            key={frontItem.id}
+            item={frontItem}
             shelfId={shelfId}
             slotIndex={slotIndex}
             cellIndex={cellIndex}
-            isTopItem={index === 0}
+            isTopItem={true}
             onDragStart={onDragStart}
             onDragEnd={onDragEnd}
-            className={index > 0 ? styles.stackItem : ''}
-            style={index > 0 ? { '--stack-offset': index } : undefined}
           />
-        ))}
+        )}
+        {cell.nextItem && (
+          <ItemComponent
+            key={`next-${cell.nextItem.id}`}
+            item={cell.nextItem}
+            shelfId={shelfId}
+            slotIndex={slotIndex}
+            cellIndex={cellIndex}
+            isTopItem={false}
+            onDragStart={onDragStart}
+            onDragEnd={onDragEnd}
+            className={styles.stackItem}
+            style={{ '--stack-offset': 1 }}
+          />
+        )}
       </div>
       
       {hiddenCount > 0 && (
@@ -94,7 +112,7 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
         </div>
       )}
       
-      {itemCount === 0 && canAccept && (
+      {!frontItem && canAccept && (
         <div class={styles.dropHint} aria-hidden="true">
           Drop
         </div>

@@ -50,7 +50,6 @@ export const useDragDrop = (options: UseDragDropOptions = {}): UseDragDropReturn
   }, []);
 
   const handleDragLeave = useCallback((_e: DragEvent) => {
-    // Could clear dragOverTarget here if needed
   }, []);
 
   const handleDrop = useCallback((e: DragEvent, shelfId: string, slotIndex: number, cellIndex: number) => {
@@ -194,4 +193,4 @@ export const useDraggableItem = (
       onDragEnd: handleDragEnd,
     },
   };
-};
+}

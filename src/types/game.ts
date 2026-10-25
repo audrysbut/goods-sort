@@ -15,16 +15,14 @@ export interface Item {
   type: ItemType;
 }
 
-// Cell = one of 3 horizontal positions within a slot
-// Each cell has vertical depth (stack)
-export interface SlotCell {
-  items: Item[];  // Stack of items, items[0] = front/top
-}
+// SlotDepth = one depth layer across all 3 cells
+// Each layer has 3 positions (one per cell), can be empty (null) or have an item
+export type SlotDepth = [Item | null, Item | null, Item | null];
 
-// ShelfSlot = 3 horizontal cells sharing depth
-// Match: all 3 cells have same item type at front → clear that layer
+// ShelfSlot = vertical stack of depth layers (max 3 layers)
+// All 3 cells share the same depth
 export interface ShelfSlot {
-  cells: [SlotCell, SlotCell, SlotCell];  // Exactly 3 cells per slot
+  layers: SlotDepth[];  // Max 3 layers deep
 }
 
 export interface Shelf {

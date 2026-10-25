@@ -21,7 +21,8 @@ export interface SlotCell {
   items: Item[];  // Stack of items, items[0] = front/top
 }
 
-// ShelfSlot = 3 horizontal cells
+// ShelfSlot = 3 horizontal cells sharing depth
+// Match: all 3 cells have same item type at front → clear that layer
 export interface ShelfSlot {
   cells: [SlotCell, SlotCell, SlotCell];  // Exactly 3 cells per slot
 }

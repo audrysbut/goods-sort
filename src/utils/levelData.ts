@@ -21,10 +21,15 @@ const createShelf = (id: string, slots: [ShelfSlot, ShelfSlot, ShelfSlot]): Shel
 // Level 1: Hand-crafted, guaranteed solvable
 // 
 // Each shelf has 3 slots, each slot has 3 cells
-// Total: 9 cells per shelf, 27 cells total
+// Match rule: All 3 cells in a slot have same item type at front → clear that layer
 // 
-// We'll use 3 item types (apple, banana, orange) each appearing 3 times
-// Distributed across cells so they can be matched
+// Layout:
+// Shelf 1:
+//   Slot 1: [🍎,🍎] [🍎] [🍎]      ← Layer 0: 3 apples (will clear immediately)
+//   Slot 2: [🍌] [🍌] [🍌]          ← Layer 0: 3 bananas (will clear immediately)
+//   Slot 3: [🍊,🍊] [🍊] [🍊]       ← Layer 0: 3 oranges (will clear immediately)
+// Shelf 2: All empty (for maneuvering)
+// Shelf 3: All empty (for maneuvering)
 
 let itemCounter = 0;
 const nextId = (type: ItemType) => `${type}-${itemCounter++}`;
@@ -34,53 +39,29 @@ export const level1: LevelData = {
     createShelf('shelf-1', [
       createSlot([
         createCell({ id: nextId('apple'), type: 'apple' }, { id: nextId('apple'), type: 'apple' }),  // cell 0: 2 apples
+        createCell({ id: nextId('apple'), type: 'apple' }),  // cell 1: 1 apple
+        createCell({ id: nextId('apple'), type: 'apple' }),  // cell 2: 1 apple
+      ]),
+      createSlot([
+        createCell({ id: nextId('banana'), type: 'banana' }),  // cell 0: 1 banana
         createCell({ id: nextId('banana'), type: 'banana' }),  // cell 1: 1 banana
+        createCell({ id: nextId('banana'), type: 'banana' }),  // cell 2: 1 banana
+      ]),
+      createSlot([
+        createCell({ id: nextId('orange'), type: 'orange' }, { id: nextId('orange'), type: 'orange' }),  // cell 0: 2 oranges
+        createCell({ id: nextId('orange'), type: 'orange' }),  // cell 1: 1 orange
         createCell({ id: nextId('orange'), type: 'orange' }),  // cell 2: 1 orange
-      ]),
-      createSlot([
-        createCell({ id: nextId('apple'), type: 'apple' }),  // cell 0: 1 apple
-        createCell({ id: nextId('banana'), type: 'banana' }, { id: nextId('banana'), type: 'banana' }),  // cell 1: 2 bananas
-        createCell({ id: nextId('orange'), type: 'orange' }, { id: nextId('orange'), type: 'orange' }),  // cell 2: 2 oranges
-      ]),
-      createSlot([
-        createCell(),  // cell 0: empty
-        createCell(),  // cell 1: empty
-        createCell(),  // cell 2: empty
       ]),
     ]),
     createShelf('shelf-2', [
-      createSlot([
-        createCell(),
-        createCell(),
-        createCell(),
-      ]),
-      createSlot([
-        createCell(),
-        createCell(),
-        createCell(),
-      ]),
-      createSlot([
-        createCell(),
-        createCell(),
-        createCell(),
-      ]),
+      createSlot([createCell(), createCell(), createCell()]),
+      createSlot([createCell(), createCell(), createCell()]),
+      createSlot([createCell(), createCell(), createCell()]),
     ]),
     createShelf('shelf-3', [
-      createSlot([
-        createCell(),
-        createCell(),
-        createCell(),
-      ]),
-      createSlot([
-        createCell(),
-        createCell(),
-        createCell(),
-      ]),
-      createSlot([
-        createCell(),
-        createCell(),
-        createCell(),
-      ]),
+      createSlot([createCell(), createCell(), createCell()]),
+      createSlot([createCell(), createCell(), createCell()]),
+      createSlot([createCell(), createCell(), createCell()]),
     ]),
   ],
 };

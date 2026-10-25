@@ -10,16 +10,68 @@
   box-shadow: 
     inset 0 1px 2px rgba(255, 255, 255, 0.5),
     0 1px 3px rgba(0, 0, 0, 0.1);
+  position: relative;
 }
 
-/* Slot label for accessibility */
-.slotContainer::before {
-  content: attr(aria-label);
+.slotContainer.hasLayerMatch {
+  border-color: #4CAF50;
+  border-width: 3px;
+  background: linear-gradient(145deg, #e8f5e9 0%, #c8e6c9 100%);
+  animation: matchPulse 1s ease-in-out infinite;
+}
+
+@keyframes matchPulse {
+  0%, 100% {
+    box-shadow: 
+      0 0 0 0 rgba(76, 175, 80, 0.4),
+      inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+  50% {
+    box-shadow: 
+      0 0 0 8px rgba(76, 175, 80, 0.1),
+      inset 0 1px 2px rgba(255, 255, 255, 0.5);
+  }
+}
+
+/* Layer match indicator - shows at top of slot */
+.layerMatchIndicator {
   position: absolute;
-  top: -20px;
-  left: 0;
-  font-size: 10px;
-  color: #999;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 8px;
+  background: #4CAF50;
+  color: white;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
-  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(76, 175, 80, 0.4);
+  z-index: 10;
+  animation: indicatorPop 0.3s ease-out;
+}
+
+@keyframes indicatorPop {
+  from {
+    transform: translateX(-50%) scale(0);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(-50%) scale(1);
+    opacity: 1;
+  }
+}
+
+.matchIcon {
+  font-size: 14px;
+}
+
+.matchText {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }

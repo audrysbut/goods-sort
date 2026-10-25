@@ -32,26 +32,30 @@ export const cloneShelves = (shelves: Shelf[]): Shelf[] => {
 };
 
 /**
- * Check if a cell has 3 identical items (match-3)
+ * Check if a slot has a layer match (all 3 cells have same item type at front)
  */
-export const checkMatch = (cell: SlotCell): boolean => {
-  if (cell.items.length !== 3) return false;
-  const firstType = cell.items[0].type;
-  return cell.items.every(item => item.type === firstType);
+export const checkSlotLayerMatch = (slot: ShelfSlot): ItemType | null => {
+  const frontItems = slot.cells.map(cell => cell.items[0]).filter(Boolean) as Item[];
+  if (frontItems.length !== 3) return null;
+  
+  const firstType = frontItems[0].type;
+  if (frontItems.every(item => item.type === firstType)) {
+    return firstType;
+  }
+  return null;
 };
 
 /**
- * Find all cells that have a match (3 identical items)
+ * Find all slots that have a layer match
  */
-export const findMatches = (shelves: Shelf[]): Array<{ shelfId: string; slotIndex: number; cellIndex: number }> => {
-  const matches: Array<{ shelfId: string; slotIndex: number; cellIndex: number }> = [];
+export const findSlotLayerMatches = (shelves: Shelf[]): Array<{ shelfId: string; slotIndex: number; itemType: ItemType }> => {
+  const matches: Array<{ shelfId: string; slotIndex: number; itemType: ItemType }> = [];
   
   for (const shelf of shelves) {
     for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
-      for (let cellIdx = 0; cellIdx < 3; cellIdx++) {
-        if (checkMatch(shelf.slots[slotIdx].cells[cellIdx])) {
-          matches.push({ shelfId: shelf.id, slotIndex: slotIdx, cellIndex: cellIdx });
-        }
+      const matchType = checkSlotLayerMatch(shelf.slots[slotIdx]);
+      if (matchType) {
+        matches.push({ shelfId: shelf.id, slotIndex: slotIdx, itemType: matchType });
       }
     }
   }
@@ -60,17 +64,21 @@ export const findMatches = (shelves: Shelf[]): Array<{ shelfId: string; slotInde
 };
 
 /**
- * Clear matched cells (remove all items from matched cells)
+ * Clear matched layers (remove front item from all 3 cells in matched slots)
  */
-export const clearMatches = (shelves: Shelf[]): Shelf[] => {
+export const clearSlotLayerMatches = (shelves: Shelf[]): Shelf[] => {
   const newShelves = cloneShelves(shelves);
   
   for (const shelf of newShelves) {
     for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
-      for (let cellIdx = 0; cellIdx < 3; cellIdx++) {
-        if (checkMatch(shelf.slots[slotIdx].cells[cellIdx])) {
-          shelf.slots[slotIdx].cells[cellIdx].items = [];
-        }
+      const matchType = checkSlotLayerMatch(shelf.slots[slotIdx]);
+      if (matchType) {
+        // Remove front item from all 3 cells
+        shelf.slots[slotIdx].cells.forEach(cell => {
+          if (cell.items.length > 0) {
+            cell.items.shift();
+          }
+        });
       }
     }
   }
@@ -172,7 +180,7 @@ export const moveItem = (
 };
 
 /**
- * Process a move and check for matches/clears
+ * Process a move and check for slot layer matches/clears
  * Returns { shelves, isWon }
  */
 export const processMove = (
@@ -188,11 +196,11 @@ export const processMove = (
   const newShelves = moveItem(shelves, fromShelfId, fromSlotIndex, fromCellIndex, toShelfId, toSlotIndex, toCellIndex);
   if (!newShelves) return null;
   
-  // Check for matches and clear them
-  const matches = findMatches(newShelves);
+  // Check for slot layer matches and clear them
+  const matches = findSlotLayerMatches(newShelves);
   
   if (matches.length > 0) {
-    const clearedShelves = clearMatches(newShelves);
+    const clearedShelves = clearSlotLayerMatches(newShelves);
     const isWon = checkWin(clearedShelves);
     return { shelves: clearedShelves, isWon };
   }

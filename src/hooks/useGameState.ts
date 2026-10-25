@@ -6,7 +6,8 @@ import { level1 } from '../utils/levelData';
 import { 
   processMove, 
   canAcceptItem,
-  getTopItem 
+  getTopItem,
+  checkSlotLayerMatch
 } from '../utils/helpers';
 
 interface SlotCellWithMeta extends SlotCell {
@@ -15,10 +16,13 @@ interface SlotCellWithMeta extends SlotCell {
   canAccept: boolean;
   isDragTarget: boolean;
   hasMatch: boolean;
+  nextItem: Item | null;
 }
 
 interface ShelfSlotWithMeta {
   cells: [SlotCellWithMeta, SlotCellWithMeta, SlotCellWithMeta];
+  hasLayerMatch: boolean;
+  matchType: string | null;
 }
 
 interface ShelfWithMeta {
@@ -56,7 +60,6 @@ export const useGameState = (initialLevel: LevelData = level1): UseGameStateRetu
   }, [shelves]);
 
   const handleDragStart = useCallback((_source: DragSource) => {
-    // Drag started - preview handled by dragOver
   }, []);
 
   const handleDragOver = useCallback((shelfId: string, slotIndex: number, cellIndex: number) => {
@@ -131,25 +134,72 @@ export const useGameState = (initialLevel: LevelData = level1): UseGameStateRetu
     setIsGameWon(false);
   }, [history]);
 
-  const enhanceCell = (cell: SlotCell, shelfId: string, slotIndex: number, cellIndex: number): SlotCellWithMeta => ({
+  const enhanceCell = (cell: SlotCell): SlotCellWithMeta => ({
     ...cell,
     topItem: getTopItem(cell),
     itemCount: cell.items.length,
     canAccept: canAcceptItem(cell),
-    isDragTarget: dragPreview?.shelfId === shelfId && dragPreview?.slotIndex === slotIndex && dragPreview?.cellIndex === cellIndex,
-    hasMatch: cell.items.length === 3 && 
-              cell.items.every(item => item.type === cell.items[0].type),
+    isDragTarget: false,
+    hasMatch: false,
+    nextItem: cell.items.length > 1 ? cell.items[1] : null,
   });
+
+  const enhanceSlot = (slot: { cells: [SlotCell, SlotCell, SlotCell] }): { 
+    cells: [SlotCellWithMeta, SlotCellWithMeta, SlotCellWithMeta];
+    hasLayerMatch: boolean;
+    matchType: string | null;
+  } => {
+    const matchType = checkSlotLayerMatch(slot as any);
+    return {
+      cells: [
+        enhanceCell(slot.cells[0]),
+        enhanceCell(slot.cells[1]),
+        enhanceCell(slot.cells[2]),
+      ] as [SlotCellWithMeta, SlotCellWithMeta, SlotCellWithMeta],
+      hasLayerMatch: !!matchType,
+      matchType: matchType || null,
+    };
+  };
 
   const shelfData = useMemo(() => shelves.map(shelf => ({
     ...shelf,
-    slots: shelf.slots.map((slot, slotIdx) => ({
-      cells: slot.cells.map((cell, cellIdx) => enhanceCell(cell, shelf.id, slotIdx, cellIdx))
-    })) as [ShelfSlotWithMeta, ShelfSlotWithMeta, ShelfSlotWithMeta]
-  })), [shelves, dragPreview]);
+    slots: [
+      enhanceSlot(shelf.slots[0]),
+      enhanceSlot(shelf.slots[1]),
+      enhanceSlot(shelf.slots[2]),
+    ] as [ShelfSlotWithMeta, ShelfSlotWithMeta, ShelfSlotWithMeta]
+  })), [shelves]);
+
+  // Set isDragTarget at render time based on dragPreview
+  const shelvesWithDragTarget = useMemo(() => shelfData.map(shelf => ({
+    ...shelf,
+    slots: [
+      {
+        ...shelf.slots[0],
+        cells: shelf.slots[0].cells.map((cell, cellIdx) => ({
+          ...cell,
+          isDragTarget: dragPreview?.shelfId === shelf.id && dragPreview?.slotIndex === 0 && dragPreview?.cellIndex === cellIdx
+        })) as [SlotCellWithMeta, SlotCellWithMeta, SlotCellWithMeta]
+      },
+      {
+        ...shelf.slots[1],
+        cells: shelf.slots[1].cells.map((cell, cellIdx) => ({
+          ...cell,
+          isDragTarget: dragPreview?.shelfId === shelf.id && dragPreview?.slotIndex === 1 && dragPreview?.cellIndex === cellIdx
+        })) as [SlotCellWithMeta, SlotCellWithMeta, SlotCellWithMeta]
+      },
+      {
+        ...shelf.slots[2],
+        cells: shelf.slots[2].cells.map((cell, cellIdx) => ({
+          ...cell,
+          isDragTarget: dragPreview?.shelfId === shelf.id && dragPreview?.slotIndex === 2 && dragPreview?.cellIndex === cellIdx
+        })) as [SlotCellWithMeta, SlotCellWithMeta, SlotCellWithMeta]
+      },
+    ] as [ShelfSlotWithMeta, ShelfSlotWithMeta, ShelfSlotWithMeta]
+  })), [shelfData, dragPreview]);
 
   return {
-    shelves: shelfData,
+    shelves: shelvesWithDragTarget,
     isGameWon,
     moveCount,
     canUndo: history.length > 1,

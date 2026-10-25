@@ -27,7 +27,7 @@ export const ShelfComponent: FunctionalComponent<ShelfProps> = ({
       {slots.map((slot, slotIndex) => (
         <ShelfSlotComponent
           key={`${shelf.id}-slot-${slotIndex}`}
-          slot={slot}
+          slot={slot as any}
           shelfId={shelf.id}
           slotIndex={slotIndex}
           onDrop={onDrop}

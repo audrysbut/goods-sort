@@ -1,0 +1,153 @@
+/* src/components/GameBoard.module.css */
+
+.gameBoard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+  padding: 24px;
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f5f5f5 0%, #e8e8e8 100%);
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  max-width: 600px;
+  padding: 0 8px;
+}
+
+.title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+  letter-spacing: -0.5px;
+}
+
+.stats {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.statLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #888;
+  font-weight: 600;
+}
+
+.statValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: #333;
+  font-variant-numeric: tabular-nums;
+}
+
+.undoButton {
+  padding: 8px 16px;
+  background: #fff;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.undoButton:hover:not(:disabled) {
+  background: #f5f5f5;
+  border-color: #d0d0d0;
+  color: #333;
+}
+
+.undoButton:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.undoButton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.undoButton:focus-visible {
+  outline: 2px solid #2196F3;
+  outline-offset: 2px;
+}
+
+.board {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: center;
+  width: 100%;
+  max-width: 600px;
+}
+
+.footer {
+  width: 100%;
+  max-width: 600px;
+  padding: 0 8px;
+}
+
+.instructions {
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .gameBoard {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .stats {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .title {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .gameBoard {
+    padding: 12px;
+  }
+  
+  .statValue {
+    font-size: 20px;
+  }
+  
+  .undoButton {
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+}

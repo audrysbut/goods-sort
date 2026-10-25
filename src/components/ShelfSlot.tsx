@@ -38,7 +38,7 @@ export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
 
   const items = slot.items;
   const itemCount = items.length;
-  const hiddenCount = itemCount - 1;
+  const hiddenCount = Math.max(0, itemCount - 3);
 
   const slotClasses = [
     styles.slot,
@@ -76,6 +76,13 @@ export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
             style={index > 0 ? { '--stack-offset': index } : undefined}
           />
         ))}
+      </div>
+      
+      {/* Visual depth indicator - 3 dots showing capacity */}
+      <div class={styles.depthIndicator} aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
       
       {hiddenCount > 0 && (

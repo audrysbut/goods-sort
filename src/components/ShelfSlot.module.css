@@ -100,6 +100,45 @@
   pointer-events: none;
 }
 
+/* Depth indicator - 3 dots on the right side showing 3-item capacity */
+.depthIndicator {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  pointer-events: none;
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+}
+
+.slot:hover .depthIndicator,
+.slot.dragTarget .depthIndicator {
+  opacity: 1;
+}
+
+.depthIndicator span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #999;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.depthIndicator span:nth-child(1) {
+  background: #666;
+}
+
+.depthIndicator span:nth-child(2) {
+  background: #888;
+}
+
+.depthIndicator span:nth-child(3) {
+  background: #aaa;
+}
+
 /* Count badge for hidden items */
 .countBadge {
   position: absolute;

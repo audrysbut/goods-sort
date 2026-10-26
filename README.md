@@ -2,6 +2,10 @@
 
 A relaxing puzzle game built with **Bun**, **Preact**, **TypeScript**, and **Vite**. Sort items on shelves by matching 3 identical items in a row to clear them.
 
+## 🌐 Live Demo
+
+**https://audrysbut.github.io/goods-sort/**
+
 ## 🎮 Gameplay
 
 ### Mechanics

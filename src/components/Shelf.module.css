@@ -13,32 +13,6 @@
   min-width: 580px;
 }
 
-/* Shelf wood texture effect */
-.shelf::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-image: 
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 2px,
-      rgba(0, 0, 0, 0.02) 2px,
-      rgba(0, 0, 0, 0.02) 4px
-    );
-  border-radius: 16px;
-  pointer-events: none;
-  z-index: 0;
-}
-
-.shelf > * {
-  position: relative;
-  z-index: 1;
-}
-
 /* Responsive */
 @media (max-width: 900px) {
   .shelf {

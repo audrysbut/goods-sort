@@ -44,3 +44,6 @@ coverage/
 
 # Bun
 .bun/
+
+# Playwright MCP debug artifacts (auto-generated)
+.playwright-mcp/

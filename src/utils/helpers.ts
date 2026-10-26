@@ -1,11 +1,18 @@
 // src/utils/helpers.ts
 
-import type { Item, ItemType, Shelf, ShelfSlot, SlotDepth, LevelData } from '../types/game';
+import type {
+  Item,
+  ItemType,
+  Shelf,
+  ShelfSlot,
+  SlotDepth,
+  LevelData,
+} from "../types/game";
 
 /**
  * Generate a unique ID
  */
-export const generateId = (prefix: string = 'item'): string => {
+export const generateId = (prefix: string = "item"): string => {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 };
 
@@ -21,13 +28,13 @@ export const createItem = (type: ItemType): Item => ({
  * Deep clone shelves array
  */
 export const cloneShelves = (shelves: Shelf[]): Shelf[] => {
-  return shelves.map(shelf => ({
+  return shelves.map((shelf) => ({
     ...shelf,
     slots: [
-      { layers: shelf.slots[0].layers.map(layer => [...layer]) } as ShelfSlot,
-      { layers: shelf.slots[1].layers.map(layer => [...layer]) } as ShelfSlot,
-      { layers: shelf.slots[2].layers.map(layer => [...layer]) } as ShelfSlot,
-    ] as [ShelfSlot, ShelfSlot, ShelfSlot]
+      { layers: shelf.slots[0].layers.map((layer) => [...layer]) } as ShelfSlot,
+      { layers: shelf.slots[1].layers.map((layer) => [...layer]) } as ShelfSlot,
+      { layers: shelf.slots[2].layers.map((layer) => [...layer]) } as ShelfSlot,
+    ] as [ShelfSlot, ShelfSlot, ShelfSlot],
   }));
 };
 
@@ -36,13 +43,13 @@ export const cloneShelves = (shelves: Shelf[]): Shelf[] => {
  */
 export const checkSlotFrontLayerMatch = (slot: ShelfSlot): ItemType | null => {
   if (slot.layers.length === 0) return null;
-  
+
   const frontLayer = slot.layers[0];
   const frontItems = frontLayer.filter(Boolean) as Item[];
   if (frontItems.length !== 3) return null;
-  
+
   const firstType = frontItems[0].type;
-  if (frontItems.every(item => item.type === firstType)) {
+  if (frontItems.every((item) => item.type === firstType)) {
     return firstType;
   }
   return null;
@@ -51,18 +58,28 @@ export const checkSlotFrontLayerMatch = (slot: ShelfSlot): ItemType | null => {
 /**
  * Find all slots that have a front layer match
  */
-export const findSlotFrontLayerMatches = (shelves: Shelf[]): Array<{ shelfId: string; slotIndex: number; itemType: ItemType }> => {
-  const matches: Array<{ shelfId: string; slotIndex: number; itemType: ItemType }> = [];
-  
+export const findSlotFrontLayerMatches = (
+  shelves: Shelf[],
+): Array<{ shelfId: string; slotIndex: number; itemType: ItemType }> => {
+  const matches: Array<{
+    shelfId: string;
+    slotIndex: number;
+    itemType: ItemType;
+  }> = [];
+
   for (const shelf of shelves) {
     for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
       const matchType = checkSlotFrontLayerMatch(shelf.slots[slotIdx]);
       if (matchType) {
-        matches.push({ shelfId: shelf.id, slotIndex: slotIdx, itemType: matchType });
+        matches.push({
+          shelfId: shelf.id,
+          slotIndex: slotIdx,
+          itemType: matchType,
+        });
       }
     }
   }
-  
+
   return matches;
 };
 
@@ -70,17 +87,21 @@ export const findSlotFrontLayerMatches = (shelves: Shelf[]): Array<{ shelfId: st
  * Clear front layer match (remove front layer from all 3 cells in matched slot)
  * This reveals the next depth layer
  */
-export const clearSlotFrontLayerMatch = (shelves: Shelf[], shelfId: string, slotIndex: number): Shelf[] => {
+export const clearSlotFrontLayerMatch = (
+  shelves: Shelf[],
+  shelfId: string,
+  slotIndex: number,
+): Shelf[] => {
   const newShelves = cloneShelves(shelves);
-  const shelf = newShelves.find(s => s.id === shelfId);
+  const shelf = newShelves.find((s) => s.id === shelfId);
   if (!shelf) return newShelves;
-  
+
   const slot = shelf.slots[slotIndex];
   if (slot.layers.length > 0) {
     // Remove the front layer (shift)
     slot.layers.shift();
   }
-  
+
   return newShelves;
 };
 
@@ -88,9 +109,12 @@ export const clearSlotFrontLayerMatch = (shelves: Shelf[], shelfId: string, slot
  * Check if a cell (in front layer) can accept more items
  * For depth-per-slot: can only add to front layer, and only if cell is empty
  */
-export const canAcceptItemInFrontLayer = (slot: ShelfSlot, cellIndex: number): boolean => {
+export const canAcceptItemInFrontLayer = (
+  slot: ShelfSlot,
+  cellIndex: number,
+): boolean => {
   if (slot.layers.length === 0) return true; // Empty slot, can add to new front layer
-  
+
   const frontLayer = slot.layers[0];
   return frontLayer[cellIndex] === null; // Can only add if cell is empty in front layer
 };
@@ -98,7 +122,10 @@ export const canAcceptItemInFrontLayer = (slot: ShelfSlot, cellIndex: number): b
 /**
  * Get the top (front) item of a cell in the front layer
  */
-export const getFrontLayerItem = (slot: ShelfSlot, cellIndex: number): Item | null => {
+export const getFrontLayerItem = (
+  slot: ShelfSlot,
+  cellIndex: number,
+): Item | null => {
   if (slot.layers.length === 0) return null;
   return slot.layers[0][cellIndex];
 };
@@ -106,7 +133,11 @@ export const getFrontLayerItem = (slot: ShelfSlot, cellIndex: number): Item | nu
 /**
  * Get item at specific depth layer
  */
-export const getItemAtDepth = (slot: ShelfSlot, depth: number, cellIndex: number): Item | null => {
+export const getItemAtDepth = (
+  slot: ShelfSlot,
+  depth: number,
+  cellIndex: number,
+): Item | null => {
   if (depth >= slot.layers.length) return null;
   return slot.layers[depth][cellIndex];
 };
@@ -122,7 +153,11 @@ export const getSlotDepth = (slot: ShelfSlot): number => {
  * Add item to front layer of a cell
  * If slot is empty, creates new front layer
  */
-export const addItemToFrontLayer = (slot: ShelfSlot, cellIndex: number, item: Item): boolean => {
+export const addItemToFrontLayer = (
+  slot: ShelfSlot,
+  cellIndex: number,
+  item: Item,
+): boolean => {
   if (slot.layers.length === 0) {
     // Create first layer
     const newLayer: SlotDepth = [null, null, null];
@@ -130,10 +165,10 @@ export const addItemToFrontLayer = (slot: ShelfSlot, cellIndex: number, item: It
     slot.layers.push(newLayer);
     return true;
   }
-  
+
   const frontLayer = slot.layers[0];
   if (frontLayer[cellIndex] !== null) return false; // Cell occupied
-  
+
   frontLayer[cellIndex] = item;
   return true;
 };
@@ -141,20 +176,23 @@ export const addItemToFrontLayer = (slot: ShelfSlot, cellIndex: number, item: It
 /**
  * Remove item from front layer of a cell
  */
-export const removeItemFromFrontLayer = (slot: ShelfSlot, cellIndex: number): Item | null => {
+export const removeItemFromFrontLayer = (
+  slot: ShelfSlot,
+  cellIndex: number,
+): Item | null => {
   if (slot.layers.length === 0) return null;
-  
+
   const frontLayer = slot.layers[0];
   const item = frontLayer[cellIndex];
   if (!item) return null;
-  
+
   frontLayer[cellIndex] = null;
-  
+
   // If front layer is now completely empty, remove it
-  if (frontLayer.every(cell => cell === null)) {
+  if (frontLayer.every((cell) => cell === null)) {
     slot.layers.shift();
   }
-  
+
   return item;
 };
 
@@ -169,43 +207,48 @@ export const moveItem = (
   fromCellIndex: number,
   toShelfId: string,
   toSlotIndex: number,
-  toCellIndex: number
+  toCellIndex: number,
 ): Shelf[] | null => {
   // Find source shelf and slot
-  const fromShelfIndex = shelves.findIndex(s => s.id === fromShelfId);
+  const fromShelfIndex = shelves.findIndex((s) => s.id === fromShelfId);
   if (fromShelfIndex === -1) return null;
-  
+
   const fromShelf = shelves[fromShelfIndex];
   const fromSlot = fromShelf.slots[fromSlotIndex];
-  
+
   // Check if there's an item to move (from front layer)
   const item = getFrontLayerItem(fromSlot, fromCellIndex);
   if (!item) return null;
-  
+
   // Find target shelf and slot
-  const toShelfIndex = shelves.findIndex(s => s.id === toShelfId);
+  const toShelfIndex = shelves.findIndex((s) => s.id === toShelfId);
   if (toShelfIndex === -1) return null;
-  
+
   const toShelf = shelves[toShelfIndex];
   const toSlot = toShelf.slots[toSlotIndex];
-  
+
   // Check if target can accept item (in front layer)
   if (!canAcceptItemInFrontLayer(toSlot, toCellIndex)) return null;
-  
+
   // Don't allow moving to the same cell
-  if (fromShelfId === toShelfId && fromSlotIndex === toSlotIndex && fromCellIndex === toCellIndex) return null;
-  
+  if (
+    fromShelfId === toShelfId &&
+    fromSlotIndex === toSlotIndex &&
+    fromCellIndex === toCellIndex
+  )
+    return null;
+
   // Perform the move
   const newShelves = cloneShelves(shelves);
   const newFromShelf = newShelves[fromShelfIndex];
   const newToShelf = newShelves[toShelfIndex];
-  
+
   // Remove from source
   removeItemFromFrontLayer(newFromShelf.slots[fromSlotIndex], fromCellIndex);
-  
+
   // Add to target
   addItemToFrontLayer(newToShelf.slots[toSlotIndex], toCellIndex, item);
-  
+
   return newShelves;
 };
 
@@ -221,26 +264,34 @@ export const processMove = (
   fromCellIndex: number,
   toShelfId: string,
   toSlotIndex: number,
-  toCellIndex: number
+  toCellIndex: number,
 ): { shelves: Shelf[]; isWon: boolean } | null => {
   // Perform the move
-  const newShelves = moveItem(shelves, fromShelfId, fromSlotIndex, fromCellIndex, toShelfId, toSlotIndex, toCellIndex);
+  const newShelves = moveItem(
+    shelves,
+    fromShelfId,
+    fromSlotIndex,
+    fromCellIndex,
+    toShelfId,
+    toSlotIndex,
+    toCellIndex,
+  );
   if (!newShelves) return null;
-  
+
   // Check for front layer match ONLY on the target slot
-  const targetShelf = newShelves.find(s => s.id === toShelfId);
+  const targetShelf = newShelves.find((s) => s.id === toShelfId);
   if (!targetShelf) return { shelves: newShelves, isWon: checkWin(newShelves) };
-  
+
   const targetSlot = targetShelf.slots[toSlotIndex];
   const matchType = checkSlotFrontLayerMatch(targetSlot);
-  
+
   let finalShelves = newShelves;
-  
+
   if (matchType) {
     // Clear the matched front layer on target slot only
     finalShelves = clearSlotFrontLayerMatch(newShelves, toShelfId, toSlotIndex);
   }
-  
+
   const isWon = checkWin(finalShelves);
   return { shelves: finalShelves, isWon };
 };
@@ -249,8 +300,8 @@ export const processMove = (
  * Check if all shelves are empty (win condition)
  */
 export const checkWin = (shelves: Shelf[]): boolean => {
-  return shelves.every(shelf => 
-    shelf.slots.every(slot => slot.layers.length === 0)
+  return shelves.every((shelf) =>
+    shelf.slots.every((slot) => slot.layers.length === 0),
   );
 };
 
@@ -268,7 +319,7 @@ export const countItemTypes = (shelves: Shelf[]): Record<ItemType, number> => {
     lemon: 0,
     watermelon: 0,
   };
-  
+
   for (const shelf of shelves) {
     for (const slot of shelf.slots) {
       for (const layer of slot.layers) {
@@ -278,7 +329,7 @@ export const countItemTypes = (shelves: Shelf[]): Record<ItemType, number> => {
       }
     }
   }
-  
+
   return counts;
 };
 
@@ -287,7 +338,9 @@ export const countItemTypes = (shelves: Shelf[]): Record<ItemType, number> => {
  */
 export const isLevelSolvable = (level: LevelData): boolean => {
   const counts = countItemTypes(level.shelves);
-  
-  const clearableTypes = Object.entries(counts).filter(([, count]) => count >= 3);
+
+  const clearableTypes = Object.entries(counts).filter(
+    ([, count]) => count >= 3,
+  );
   return clearableTypes.length > 0;
 };

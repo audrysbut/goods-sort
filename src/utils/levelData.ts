@@ -1,6 +1,13 @@
 // src/utils/levelData.ts
 
-import type { LevelData, Shelf, ShelfSlot, SlotDepth, Item, ItemType } from '../types/game';
+import type {
+  LevelData,
+  Shelf,
+  ShelfSlot,
+  SlotDepth,
+  Item,
+  ItemType,
+} from "../types/game";
 
 // Helper to create a slot depth layer
 const createLayer = (items: (Item | null)[]): SlotDepth => {
@@ -17,18 +24,21 @@ const createSlot = (...layers: SlotDepth[]): ShelfSlot => ({
 });
 
 // Helper to create a shelf
-const createShelf = (id: string, slots: [ShelfSlot, ShelfSlot, ShelfSlot]): Shelf => ({
+const createShelf = (
+  id: string,
+  slots: [ShelfSlot, ShelfSlot, ShelfSlot],
+): Shelf => ({
   id,
   slots,
 });
 
 // Level 1: Multi-depth level for testing
-// 
+//
 // Each slot has multiple depth layers (no front layer matches at start)
-// 
+//
 // Shelf 1:
 //   Slot 1: Depth 3 - Layer 0: [🍎, 🍌, 🍊] (mixed, no match)
-//                        Layer 1: [🍎, 🍌, 🍊] (mixed, no match)  
+//                        Layer 1: [🍎, 🍌, 🍊] (mixed, no match)
 //                        Layer 2: [🍎, 🍌, 🍊] (mixed, no match)
 //   Slot 2: Depth 2 - Layer 0: [🍌, 🍊, 🍇] (mixed)
 //                        Layer 1: [🍌, 🍊, 🍇] (mixed)
@@ -42,38 +52,41 @@ const createShelf = (id: string, slots: [ShelfSlot, ShelfSlot, ShelfSlot]): Shel
 let itemCounter = 0;
 const nextId = (type: ItemType) => `${type}-${itemCounter++}`;
 
-const apple = () => ({ id: nextId('apple'), type: 'apple' as ItemType });
-const banana = () => ({ id: nextId('banana'), type: 'banana' as ItemType });
-const orange = () => ({ id: nextId('orange'), type: 'orange' as ItemType });
-const grape = () => ({ id: nextId('grape'), type: 'grape' as ItemType });
-const strawberry = () => ({ id: nextId('strawberry'), type: 'strawberry' as ItemType });
+const apple = () => ({ id: nextId("apple"), type: "apple" as ItemType });
+const banana = () => ({ id: nextId("banana"), type: "banana" as ItemType });
+const orange = () => ({ id: nextId("orange"), type: "orange" as ItemType });
+const grape = () => ({ id: nextId("grape"), type: "grape" as ItemType });
+const strawberry = () => ({
+  id: nextId("strawberry"),
+  type: "strawberry" as ItemType,
+});
 
 export const level1: LevelData = {
   shelves: [
-    createShelf('shelf-1', [
+    createShelf("shelf-1", [
       createSlot(
         // Slot 1: Depth 3
-        createLayer([apple(), banana(), orange()]),      // Layer 0 (front): mixed
-        createLayer([apple(), banana(), orange()]),      // Layer 1: mixed
-        createLayer([apple(), banana(), orange()]),      // Layer 2 (back): mixed
+        createLayer([apple(), banana(), orange()]), // Layer 0 (front): mixed
+        createLayer([apple(), banana(), orange()]), // Layer 1: mixed
+        createLayer([apple(), banana(), orange()]), // Layer 2 (back): mixed
       ),
       createSlot(
         // Slot 2: Depth 2
-        createLayer([banana(), orange(), grape()]),      // Layer 0: mixed
-        createLayer([banana(), orange(), grape()]),      // Layer 1: mixed
+        createLayer([banana(), orange(), grape()]), // Layer 0: mixed
+        createLayer([banana(), orange(), grape()]), // Layer 1: mixed
       ),
       createSlot(
         // Slot 3: Depth 1
-        createLayer([orange(), grape(), strawberry()]),  // Layer 0: mixed
+        createLayer([orange(), grape(), strawberry()]), // Layer 0: mixed
       ),
     ]),
-    createShelf('shelf-2', [
-      createSlot(),  // Empty slot
+    createShelf("shelf-2", [
+      createSlot(), // Empty slot
       createSlot(),
       createSlot(),
     ]),
-    createShelf('shelf-3', [
-      createSlot(),  // Empty slot
+    createShelf("shelf-3", [
+      createSlot(), // Empty slot
       createSlot(),
       createSlot(),
     ]),
@@ -87,19 +100,19 @@ const createEmptySlot = (): ShelfSlot => ({
 
 // Helper to create empty level data structure
 export const createEmptyLevel = (shelfCount: number = 3): LevelData => ({
-  shelves: Array.from({ length: shelfCount }, (_, i) => 
+  shelves: Array.from({ length: shelfCount }, (_, i) =>
     createShelf(`shelf-${i + 1}`, [
       createEmptySlot(),
       createEmptySlot(),
       createEmptySlot(),
-    ])
+    ]),
   ),
 });
 
 // Validate level data
 export const validateLevel = (level: LevelData): boolean => {
   if (!level.shelves || level.shelves.length === 0) return false;
-  
+
   for (const shelf of level.shelves) {
     if (!shelf.slots || shelf.slots.length !== 3) return false;
     for (const slot of shelf.slots) {
@@ -113,6 +126,6 @@ export const validateLevel = (level: LevelData): boolean => {
       }
     }
   }
-  
+
   return true;
 };

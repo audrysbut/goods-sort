@@ -9,6 +9,7 @@ A relaxing puzzle game built with **Bun**, **Preact**, **TypeScript**, and **Vit
 ## 🎮 Gameplay
 
 ### Mechanics
+
 - **Shelves**: 3 shelves, each with 3 slots
 - **Slots**: Each slot has 3 horizontal cells (visible positions)
 - **Depth**: All 3 cells in a slot share vertical depth layers (max 3 layers deep)
@@ -17,6 +18,7 @@ A relaxing puzzle game built with **Bun**, **Preact**, **TypeScript**, and **Vit
 - **Win**: Clear all items from all shelves
 
 ### Level 1 (Solvable)
+
 ```
 Shelf 1:
   Slot 1: [🍎, 🍎, 🍎] → Front layer match!
@@ -47,14 +49,14 @@ npx playwright test
 
 ## 🛠 Tech Stack
 
-| Tool | Version |
-|------|---------|
-| Runtime | Bun |
-| Framework | Preact 10 |
-| Language | TypeScript |
-| Build | Vite 5 |
-| Testing | Playwright |
-| Styling | CSS Modules |
+| Tool        | Version             |
+| ----------- | ------------------- |
+| Runtime     | Bun                 |
+| Framework   | Preact 10           |
+| Language    | TypeScript          |
+| Build       | Vite 5              |
+| Testing     | Playwright          |
+| Styling     | CSS Modules         |
 | Drag & Drop | HTML5 API (vanilla) |
 
 ## 📁 Project Structure
@@ -111,12 +113,17 @@ Tests require the dev server running on `localhost:4200`.
 ## 🔧 Configuration
 
 ### Port
+
 Set in `vite.config.ts`:
+
 ```typescript
-server: { port: 4200 }
+server: {
+  port: 4200;
+}
 ```
 
 ### CSS Variables (in `global.css`)
+
 ```css
 :root {
   --bg-primary: #f5f5f5;

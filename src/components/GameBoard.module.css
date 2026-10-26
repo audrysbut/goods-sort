@@ -87,7 +87,7 @@
 }
 
 .undoButton:focus-visible {
-  outline: 2px solid #2196F3;
+  outline: 2px solid #2196f3;
   outline-offset: 2px;
 }
 
@@ -120,18 +120,18 @@
     padding: 16px;
     gap: 16px;
   }
-  
+
   .header {
     flex-direction: column;
     gap: 12px;
     text-align: center;
   }
-  
+
   .stats {
     width: 100%;
     justify-content: space-between;
   }
-  
+
   .title {
     font-size: 24px;
   }
@@ -141,11 +141,11 @@
   .gameBoard {
     padding: 12px;
   }
-  
+
   .statValue {
     font-size: 20px;
   }
-  
+
   .undoButton {
     padding: 6px 12px;
     font-size: 13px;

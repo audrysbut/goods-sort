@@ -1,8 +1,15 @@
 // src/hooks/useGameState.ts
 
-import { useState, useCallback, useMemo } from 'preact/hooks';
-import type { DragSource, Item, LevelData, Shelf, ShelfSlot, SlotDepth } from '../types/game';
-import { level1 } from '../utils/levelData';
+import { useState, useCallback, useMemo } from "preact/hooks";
+import type {
+  DragSource,
+  Item,
+  LevelData,
+  Shelf,
+  ShelfSlot,
+  SlotDepth,
+} from "../types/game";
+import { level1 } from "../utils/levelData";
 import {
   canAcceptItemInFrontLayer,
   checkSlotFrontLayerMatch,
@@ -11,7 +18,7 @@ import {
   getItemAtDepth,
   getSlotDepth,
   processMove,
-} from '../utils/helpers';
+} from "../utils/helpers";
 
 export interface CellView {
   frontItem: Item | null;
@@ -44,16 +51,20 @@ const createCellView = (slot: ShelfSlot, cellIndex: number): CellView => ({
 
 const createSlotView = (slot: ShelfSlot): SlotView => ({
   layers: slot.layers,
-  cells: [0, 1, 2].map(cellIndex => createCellView(slot, cellIndex)),
+  cells: [0, 1, 2].map((cellIndex) => createCellView(slot, cellIndex)),
   hasFrontMatch: checkSlotFrontLayerMatch(slot) !== null,
   depth: getSlotDepth(slot),
 });
 
 export const useGameState = (initialLevel: LevelData = level1) => {
-  const [shelves, setShelves] = useState<Shelf[]>(() => cloneShelves(initialLevel.shelves));
+  const [shelves, setShelves] = useState<Shelf[]>(() =>
+    cloneShelves(initialLevel.shelves),
+  );
   const [isGameWon, setIsGameWon] = useState(false);
   const [moveCount, setMoveCount] = useState(0);
-  const [history, setHistory] = useState<Shelf[][]>(() => [cloneShelves(initialLevel.shelves)]);
+  const [history, setHistory] = useState<Shelf[][]>(() => [
+    cloneShelves(initialLevel.shelves),
+  ]);
 
   const handleDragStart = useCallback((_source: DragSource) => {
     // Intentionally empty: the visual preview is driven by usePointerDrag.
@@ -87,8 +98,8 @@ export const useGameState = (initialLevel: LevelData = level1) => {
       if (!result) return;
 
       setShelves(result.shelves);
-      setHistory(prev => [...prev, result.shelves]);
-      setMoveCount(prev => prev + 1);
+      setHistory((prev) => [...prev, result.shelves]);
+      setMoveCount((prev) => prev + 1);
       if (result.isWon) setIsGameWon(true);
     },
     [shelves],
@@ -112,15 +123,15 @@ export const useGameState = (initialLevel: LevelData = level1) => {
     const newHistory = history.slice(0, -1);
     setHistory(newHistory);
     setShelves(newHistory[newHistory.length - 1]);
-    setMoveCount(prev => Math.max(0, prev - 1));
+    setMoveCount((prev) => Math.max(0, prev - 1));
     setIsGameWon(false);
   }, [history]);
 
   const shelvesView = useMemo<ShelfView[]>(
     () =>
-      shelves.map(shelf => ({
+      shelves.map((shelf) => ({
         id: shelf.id,
-        slots: shelf.slots.map(slot => createSlotView(slot)),
+        slots: shelf.slots.map((slot) => createSlotView(slot)),
       })),
     [shelves],
   );

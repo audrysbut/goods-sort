@@ -41,8 +41,8 @@ npx playwright test  # E2E tests (requires running dev server)
 
 ## Ports
 
-| Service | Port |
-|---|---|
+| Service         | Port |
+| --------------- | ---- |
 | Vite dev server | 4200 |
 
 ## Common gotchas

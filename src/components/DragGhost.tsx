@@ -1,9 +1,9 @@
 // src/components/DragGhost.tsx
 
-import { createPortal } from 'preact/compat';
-import { useDragController } from '../hooks/usePointerDrag';
-import { ITEM_COLORS, ITEM_LABELS } from '../types/game';
-import styles from './DragGhost.module.css';
+import { createPortal } from "preact/compat";
+import { useDragController } from "../hooks/usePointerDrag";
+import { ITEM_COLORS, ITEM_LABELS } from "../types/game";
+import styles from "./DragGhost.module.css";
 
 /**
  * The item that follows the pointer while dragging.

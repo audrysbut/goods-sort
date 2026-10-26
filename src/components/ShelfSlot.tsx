@@ -1,9 +1,9 @@
 // src/components/ShelfSlot.tsx
 
-import { FunctionalComponent } from 'preact';
-import type { SlotView } from '../hooks/useGameState';
-import { SlotCellComponent } from './SlotCell';
-import styles from './ShelfSlot.module.css';
+import { FunctionalComponent } from "preact";
+import type { SlotView } from "../hooks/useGameState";
+import { SlotCellComponent } from "./SlotCell";
+import styles from "./ShelfSlot.module.css";
 
 interface ShelfSlotProps {
   slot: SlotView;
@@ -36,11 +36,16 @@ export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
       </div>
 
       {/* Depth indicator */}
-      <div class={styles.depthIndicator} aria-label={`Depth: ${slot.depth} layers`}>
+      <div
+        class={styles.depthIndicator}
+        aria-label={`Depth: ${slot.depth} layers`}
+      >
         {Array.from({ length: 3 }, (_, i) => (
           <span
             key={i}
-            class={styles.depthDot + (i < slot.depth ? ' ' + styles.filled : '')}
+            class={
+              styles.depthDot + (i < slot.depth ? " " + styles.filled : "")
+            }
           />
         ))}
       </div>

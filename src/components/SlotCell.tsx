@@ -1,10 +1,10 @@
 // src/components/SlotCell.tsx
 
-import { FunctionalComponent } from 'preact';
-import { useDragController } from '../hooks/usePointerDrag';
-import type { CellView } from '../hooks/useGameState';
-import { ItemComponent } from './Item';
-import styles from './SlotCell.module.css';
+import { FunctionalComponent } from "preact";
+import { useDragController } from "../hooks/usePointerDrag";
+import type { CellView } from "../hooks/useGameState";
+import { ItemComponent } from "./Item";
+import styles from "./SlotCell.module.css";
 
 interface SlotCellProps {
   cell: CellView;
@@ -35,10 +35,12 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
   const cellClasses = [
     styles.cell,
     canAccept ? styles.canAccept : styles.full,
-    isCellDragTarget && canAccept ? styles.dragOver : '',
-    hasMatch ? styles.hasMatch : '',
-    !frontItem ? styles.empty : '',
-  ].filter(Boolean).join(' ');
+    isCellDragTarget && canAccept ? styles.dragOver : "",
+    hasMatch ? styles.hasMatch : "",
+    !frontItem ? styles.empty : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div
@@ -48,11 +50,13 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
       data-slot-index={slotIndex.toString()}
       data-cell-index={cellIndex.toString()}
       data-cell-id="true"
-      style={{ touchAction: 'none' }}
-      aria-label={!frontItem
-        ? `Cell ${cellIndex + 1} empty`
-        : `Cell ${cellIndex + 1} with ${cell.itemCount} item${cell.itemCount !== 1 ? 's' : ''}`}
-      aria-dropeffect={canAccept ? 'move' : 'none'}
+      style={{ touchAction: "none" }}
+      aria-label={
+        !frontItem
+          ? `Cell ${cellIndex + 1} empty`
+          : `Cell ${cellIndex + 1} with ${cell.itemCount} item${cell.itemCount !== 1 ? "s" : ""}`
+      }
+      aria-dropeffect={canAccept ? "move" : "none"}
       tabIndex={canAccept ? 0 : -1}
     >
       <div class={styles.stack}>
@@ -75,7 +79,7 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
             cellIndex={cellIndex}
             isTopItem={false}
             className={styles.stackItem}
-            style={{ '--stack-offset': '1' }}
+            style={{ "--stack-offset": "1" }}
           />
         )}
       </div>
@@ -83,14 +87,17 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
       {hiddenCount > 0 && (
         <div
           class={styles.countBadge}
-          aria-label={`${hiddenCount} more item${hiddenCount !== 1 ? 's' : ''} behind`}
+          aria-label={`${hiddenCount} more item${hiddenCount !== 1 ? "s" : ""} behind`}
         >
           +{hiddenCount}
         </div>
       )}
 
       {hasMatch && (
-        <div class={styles.matchIndicator} aria-label="Match found! Will clear on drop.">
+        <div
+          class={styles.matchIndicator}
+          aria-label="Match found! Will clear on drop."
+        >
           ✓
         </div>
       )}

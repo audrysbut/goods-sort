@@ -49,6 +49,9 @@ export type DragSource = {
   item: Item;
 };
 
+// PointerEvent type (Preact uses standard DOM events)
+export type PointerEvent = globalThis.PointerEvent;
+
 // Item type colors for visual representation
 export const ITEM_COLORS: Record<ItemType, string> = {
   apple: '#E74C3C',       // Red

@@ -1,28 +1,17 @@
 // src/components/SlotCell.tsx
 
 import { FunctionalComponent } from 'preact';
-import { useShelfSlotDrop } from '../hooks/useDragDrop';
+import { useDragController } from '../hooks/usePointerDrag';
+import type { CellView } from '../hooks/useGameState';
 import { ItemComponent } from './Item';
 import styles from './SlotCell.module.css';
 
 interface SlotCellProps {
-  cell: {
-    frontItem: any;
-    canAccept: boolean;
-    isDragTarget: boolean;
-    hasFrontMatch: boolean;
-    nextItem: any;
-    itemCount: number;
-  };
+  cell: CellView;
   shelfId: string;
   slotIndex: number;
   cellIndex: number;
-  canAccept: boolean;
-  isDragTarget: boolean;
   hasMatch: boolean;
-  onDrop: (source: { shelfId: string; slotIndex: number; cellIndex: number; item: any }) => void;
-  onDragStart: (source: { shelfId: string; slotIndex: number; cellIndex: number; item: any }) => void;
-  onDragEnd: () => void;
 }
 
 export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
@@ -30,30 +19,23 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
   shelfId,
   slotIndex,
   cellIndex,
-  canAccept,
-  isDragTarget,
   hasMatch,
-  onDrop,
-  onDragStart,
-  onDragEnd,
 }) => {
-  const { isDragOver, handleDragOver, handleDragLeave, handleDrop } = useShelfSlotDrop(
-    shelfId,
-    slotIndex,
-    cellIndex,
-    onDrop,
-    canAccept
-  );
+  const { dragOverTarget } = useDragController();
 
   const frontItem = cell.frontItem;
-  const itemCount = cell.itemCount;
-  const hiddenCount = Math.max(0, itemCount - 1);
+  const canAccept = cell.canAccept;
+  const hiddenCount = Math.max(0, cell.itemCount - 1);
+
+  const isCellDragTarget =
+    dragOverTarget?.shelfId === shelfId &&
+    dragOverTarget?.slotIndex === slotIndex &&
+    dragOverTarget?.cellIndex === cellIndex;
 
   const cellClasses = [
     styles.cell,
     canAccept ? styles.canAccept : styles.full,
-    isDragOver && canAccept ? styles.dragOver : '',
-    isDragTarget ? styles.dragTarget : '',
+    isCellDragTarget && canAccept ? styles.dragOver : '',
     hasMatch ? styles.hasMatch : '',
     !frontItem ? styles.empty : '',
   ].filter(Boolean).join(' ');
@@ -61,13 +43,15 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
   return (
     <div
       class={cellClasses}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
       role="button"
-      aria-label={!frontItem 
-        ? `Cell ${cellIndex + 1} empty` 
-        : `Cell ${cellIndex + 1} with ${itemCount} item${itemCount !== 1 ? 's' : ''}`}
+      data-shelf-id={shelfId}
+      data-slot-index={slotIndex.toString()}
+      data-cell-index={cellIndex.toString()}
+      data-cell-id="true"
+      style={{ touchAction: 'none' }}
+      aria-label={!frontItem
+        ? `Cell ${cellIndex + 1} empty`
+        : `Cell ${cellIndex + 1} with ${cell.itemCount} item${cell.itemCount !== 1 ? 's' : ''}`}
       aria-dropeffect={canAccept ? 'move' : 'none'}
       tabIndex={canAccept ? 0 : -1}
     >
@@ -80,8 +64,6 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
             slotIndex={slotIndex}
             cellIndex={cellIndex}
             isTopItem={true}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
           />
         )}
         {cell.nextItem && (
@@ -92,26 +74,27 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
             slotIndex={slotIndex}
             cellIndex={cellIndex}
             isTopItem={false}
-            onDragStart={onDragStart}
-            onDragEnd={onDragEnd}
             className={styles.stackItem}
-            style={{ '--stack-offset': 1 }}
+            style={{ '--stack-offset': '1' }}
           />
         )}
       </div>
-      
+
       {hiddenCount > 0 && (
-        <div class={styles.countBadge} aria-label={`${hiddenCount} more item${hiddenCount !== 1 ? 's' : ''} behind`}>
+        <div
+          class={styles.countBadge}
+          aria-label={`${hiddenCount} more item${hiddenCount !== 1 ? 's' : ''} behind`}
+        >
           +{hiddenCount}
         </div>
       )}
-      
+
       {hasMatch && (
         <div class={styles.matchIndicator} aria-label="Match found! Will clear on drop.">
           ✓
         </div>
       )}
-      
+
       {!frontItem && canAccept && (
         <div class={styles.dropHint} aria-hidden="true">
           Drop

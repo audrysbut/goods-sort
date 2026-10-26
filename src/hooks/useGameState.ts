@@ -1,170 +1,138 @@
 // src/hooks/useGameState.ts
 
 import { useState, useCallback, useMemo } from 'preact/hooks';
-import type { LevelData, Shelf, ShelfSlot, DragSource } from '../types/game';
+import type { DragSource, Item, LevelData, Shelf, ShelfSlot, SlotDepth } from '../types/game';
 import { level1 } from '../utils/levelData';
-import { 
-  processMove, 
+import {
   canAcceptItemInFrontLayer,
-  getFrontLayerItem,
   checkSlotFrontLayerMatch,
+  cloneShelves,
+  getFrontLayerItem,
+  getItemAtDepth,
   getSlotDepth,
-  getItemAtDepth
+  processMove,
 } from '../utils/helpers';
 
-function enhanceCell(slot: ShelfSlot, cellIndex: number) {
-  const frontItem = getFrontLayerItem(slot, cellIndex);
-  const nextItem = getItemAtDepth(slot, 1, cellIndex);
-  const itemCount = slot.layers.reduce((count, layer) => count + (layer[cellIndex] ? 1 : 0), 0);
-  
-  return {
-    frontItem,
-    canAccept: false,
-    isDragTarget: false,
-    hasFrontMatch: false,
-    nextItem,
-    itemCount,
-  };
+export interface CellView {
+  frontItem: Item | null;
+  nextItem: Item | null;
+  itemCount: number;
+  canAccept: boolean;
 }
 
-function enhanceSlot(slot: ShelfSlot) {
-  const matchType = checkSlotFrontLayerMatch(slot);
-  return {
-    cells: [enhanceCell(slot, 0), enhanceCell(slot, 1), enhanceCell(slot, 2)] as any,
-    hasFrontMatch: !!matchType,
-    matchType: matchType || null,
-    depth: getSlotDepth(slot),
-    layers: slot.layers,
-  };
+export interface SlotView {
+  layers: SlotDepth[];
+  cells: CellView[];
+  hasFrontMatch: boolean;
+  depth: number;
 }
 
-function updateSlotForDrag(slot: any, shelfId: string, slotIndex: number, dragPreview: any) {
-  return {
-    ...slot,
-    cells: slot.cells.map((cell: any, cellIdx: number) => ({
-      ...cell,
-      isDragTarget: dragPreview?.shelfId === shelfId && dragPreview?.slotIndex === slotIndex && dragPreview?.cellIndex === cellIdx,
-      canAccept: canAcceptItemInFrontLayer(slot, cellIdx),
-    })),
-  };
+export interface ShelfView {
+  id: string;
+  slots: SlotView[];
 }
+
+const createCellView = (slot: ShelfSlot, cellIndex: number): CellView => ({
+  frontItem: getFrontLayerItem(slot, cellIndex),
+  nextItem: getItemAtDepth(slot, 1, cellIndex),
+  itemCount: slot.layers.reduce(
+    (count, layer) => count + (layer[cellIndex] ? 1 : 0),
+    0,
+  ),
+  canAccept: canAcceptItemInFrontLayer(slot, cellIndex),
+});
+
+const createSlotView = (slot: ShelfSlot): SlotView => ({
+  layers: slot.layers,
+  cells: [0, 1, 2].map(cellIndex => createCellView(slot, cellIndex)),
+  hasFrontMatch: checkSlotFrontLayerMatch(slot) !== null,
+  depth: getSlotDepth(slot),
+});
 
 export const useGameState = (initialLevel: LevelData = level1) => {
-  const [shelves, setShelves] = useState<Shelf[]>(initialLevel.shelves);
+  const [shelves, setShelves] = useState<Shelf[]>(() => cloneShelves(initialLevel.shelves));
   const [isGameWon, setIsGameWon] = useState(false);
   const [moveCount, setMoveCount] = useState(0);
-  const [history, setHistory] = useState<Shelf[][]>([initialLevel.shelves]);
-  const [dragPreview, setDragPreview] = useState<{ shelfId: string; slotIndex: number; cellIndex: number } | null>(null);
-
-  const canDrop = useCallback((shelfId: string, slotIndex: number, cellIndex: number): boolean => {
-    const shelf = shelves.find(s => s.id === shelfId);
-    if (!shelf) return false;
-    return canAcceptItemInFrontLayer(shelf.slots[slotIndex], cellIndex);
-  }, [shelves]);
+  const [history, setHistory] = useState<Shelf[][]>(() => [cloneShelves(initialLevel.shelves)]);
 
   const handleDragStart = useCallback((_source: DragSource) => {
+    // Intentionally empty: the visual preview is driven by usePointerDrag.
   }, []);
 
-  const handleDragOver = useCallback((shelfId: string, slotIndex: number, cellIndex: number) => {
-    if (canDrop(shelfId, slotIndex, cellIndex)) {
-      setDragPreview({ shelfId, slotIndex, cellIndex });
-    }
-  }, [canDrop]);
+  const handleDrop = useCallback(
+    (
+      source: DragSource,
+      targetShelfId: string,
+      targetSlotIndex: number,
+      targetCellIndex: number,
+    ) => {
+      if (
+        source.shelfId === targetShelfId &&
+        source.slotIndex === targetSlotIndex &&
+        source.cellIndex === targetCellIndex
+      ) {
+        return;
+      }
 
-  const handleDragLeave = useCallback(() => {
-    setDragPreview(null);
-  }, []);
+      const result = processMove(
+        shelves,
+        source.shelfId,
+        source.slotIndex,
+        source.cellIndex,
+        targetShelfId,
+        targetSlotIndex,
+        targetCellIndex,
+      );
 
-  const handleDrop = useCallback((
-    source: DragSource, 
-    targetShelfId: string, 
-    targetSlotIndex: number,
-    targetCellIndex: number
-  ) => {
-    const targetShelf = shelves.find(s => s.id === targetShelfId);
-    if (!targetShelf) return;
-    
-    if (!canAcceptItemInFrontLayer(targetShelf.slots[targetSlotIndex], targetCellIndex)) return;
-    
-    if (source.shelfId === targetShelfId && source.slotIndex === targetSlotIndex && source.cellIndex === targetCellIndex) return;
-    
-    const result = processMove(
-      shelves,
-      source.shelfId,
-      source.slotIndex,
-      source.cellIndex,
-      targetShelfId,
-      targetSlotIndex,
-      targetCellIndex
-    );
-    
-    if (!result) return;
-    
-    setShelves(result.shelves);
-    setHistory(prev => [...prev, result.shelves]);
-    setMoveCount(prev => prev + 1);
-    
-    if (result.isWon) {
-      setIsGameWon(true);
-    }
-    
-    setDragPreview(null);
-  }, [shelves]);
+      if (!result) return;
+
+      setShelves(result.shelves);
+      setHistory(prev => [...prev, result.shelves]);
+      setMoveCount(prev => prev + 1);
+      if (result.isWon) setIsGameWon(true);
+    },
+    [shelves],
+  );
 
   const handleDragEnd = useCallback(() => {
-    setDragPreview(null);
+    // Intentionally empty: usePointerDrag resets its own state.
   }, []);
 
   const resetGame = useCallback(() => {
-    setShelves(initialLevel.shelves);
-    setIsGameWon(false);
+    const fresh = cloneShelves(initialLevel.shelves);
+    setShelves(fresh);
+    setHistory([fresh]);
     setMoveCount(0);
-    setHistory([initialLevel.shelves]);
-    setDragPreview(null);
+    setIsGameWon(false);
   }, [initialLevel]);
 
   const undoMove = useCallback(() => {
     if (history.length <= 1) return;
-    
-    const newHistory = [...history];
-    newHistory.pop();
-    const previousState = newHistory[newHistory.length - 1];
-    
-    setShelves(previousState);
+
+    const newHistory = history.slice(0, -1);
     setHistory(newHistory);
+    setShelves(newHistory[newHistory.length - 1]);
     setMoveCount(prev => Math.max(0, prev - 1));
     setIsGameWon(false);
   }, [history]);
 
-  const shelfData = useMemo(() => shelves.map(shelf => ({
-    ...shelf,
-    slots: [
-      enhanceSlot(shelf.slots[0]),
-      enhanceSlot(shelf.slots[1]),
-      enhanceSlot(shelf.slots[2]),
-    ] as any
-  })), [shelves]);
-
-  // Set isDragTarget and canAccept at render time based on dragPreview
-  const shelvesWithDragTarget = useMemo(() => shelfData.map(shelf => ({
-    ...shelf,
-    slots: [
-      updateSlotForDrag(shelf.slots[0], shelf.id, 0, dragPreview),
-      updateSlotForDrag(shelf.slots[1], shelf.id, 1, dragPreview),
-      updateSlotForDrag(shelf.slots[2], shelf.id, 2, dragPreview),
-    ] as any
-  })), [shelfData, dragPreview]);
+  const shelvesView = useMemo<ShelfView[]>(
+    () =>
+      shelves.map(shelf => ({
+        id: shelf.id,
+        slots: shelf.slots.map(slot => createSlotView(slot)),
+      })),
+    [shelves],
+  );
 
   return {
-    shelves: shelvesWithDragTarget,
+    shelves: shelvesView,
     isGameWon,
     moveCount,
     canUndo: history.length > 1,
-    dragPreview,
+
     handleDragStart,
     handleDrop,
-    handleDragOver,
-    handleDragLeave,
     handleDragEnd,
     resetGame,
     undoMove,

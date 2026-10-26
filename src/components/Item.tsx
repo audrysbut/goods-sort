@@ -1,8 +1,8 @@
 // src/components/Item.tsx
 
-import { FunctionalComponent, CSSProperties } from 'preact';
-import type { Item } from '../types/game';
-import { useDraggableItem } from '../hooks/useDragDrop';
+import { FunctionalComponent } from 'preact';
+import type { Item, PointerEvent } from '../types/game';
+import { useDragController } from '../hooks/usePointerDrag';
 import { ITEM_COLORS, ITEM_LABELS } from '../types/game';
 import styles from './Item.module.css';
 
@@ -12,10 +12,8 @@ interface ItemProps {
   slotIndex: number;
   cellIndex: number;
   isTopItem?: boolean;
-  onDragStart: (source: { shelfId: string; slotIndex: number; cellIndex: number; item: Item }) => void;
-  onDragEnd: () => void;
   className?: string;
-  style?: CSSProperties;
+  style?: Record<string, string>;
 }
 
 export const ItemComponent: FunctionalComponent<ItemProps> = ({
@@ -24,40 +22,50 @@ export const ItemComponent: FunctionalComponent<ItemProps> = ({
   slotIndex,
   cellIndex,
   isTopItem = true,
-  onDragStart,
-  onDragEnd,
   className = '',
   style,
 }) => {
-  const { isDragging, dragProps } = useDraggableItem(item, shelfId, slotIndex, cellIndex, onDragStart, onDragEnd);
-  
+  const { draggedFrom, startDrag } = useDragController();
+
   const color = ITEM_COLORS[item.type];
   const label = ITEM_LABELS[item.type];
-  
-  const draggable = isTopItem;
-  
+
+  const isCurrentlyDragged =
+    draggedFrom?.shelfId === shelfId &&
+    draggedFrom?.slotIndex === slotIndex &&
+    draggedFrom?.cellIndex === cellIndex;
+
   const baseClasses = [
     styles.item,
     className,
-    isDragging ? styles.dragging : '',
+    isCurrentlyDragged ? styles.dragging : '',
     !isTopItem ? styles.hidden : '',
   ].filter(Boolean).join(' ');
 
+  const handlePointerDown = (e: PointerEvent) => {
+    if (!isTopItem) return;
+    startDrag(e, { shelfId, slotIndex, cellIndex, item });
+  };
+
   return (
     <div
-      {...dragProps}
       class={baseClasses}
-      style={{ 
+      onPointerDown={handlePointerDown}
+      style={{
         backgroundColor: color,
-        opacity: isDragging ? 0.5 : (isTopItem ? 1 : 0.3),
-        transform: isDragging ? 'scale(1.1) rotate(3deg)' : 'none',
-        zIndex: isDragging ? 1000 : (isTopItem ? 10 : 1),
+        opacity: isCurrentlyDragged ? 0.35 : (isTopItem ? 1 : 0.3),
+        zIndex: isTopItem ? 10 : 1,
+        // The floating drag ghost takes over; the in-place item must not
+        // intercept pointer events (or elementFromPoint) mid-drag.
+        pointerEvents: isCurrentlyDragged ? 'none' : 'auto',
+        touchAction: 'none',
+        userSelect: 'none',
         ...style,
       }}
       aria-label={`Item: ${label} (${item.type})`}
-      role={draggable ? 'button' : 'img'}
-      aria-grabbed={isDragging}
-      tabindex={draggable ? 0 : -1}
+      role={isTopItem ? 'button' : 'img'}
+      aria-grabbed={isCurrentlyDragged}
+      tabindex={isTopItem ? 0 : -1}
     >
       <span class={styles.itemLabel} aria-hidden="true">{label}</span>
     </div>

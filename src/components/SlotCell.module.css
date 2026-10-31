@@ -189,3 +189,18 @@
   outline: 2px solid #2196f3;
   outline-offset: 2px;
 }
+
+/* Mobile: shrink cells to fit small screens */
+@media (max-width: 480px) {
+  .cell {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+
+  .stack {
+    width: 26px;
+    height: 26px;
+    min-width: 26px;
+  }
+}

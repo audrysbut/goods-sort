@@ -98,6 +98,8 @@
   align-items: center;
   width: 100%;
   max-width: 600px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .footer {
@@ -119,6 +121,10 @@
   .gameBoard {
     padding: 16px;
     gap: 16px;
+  }
+
+  .board {
+    align-items: flex-start;
   }
 
   .header {

@@ -93,17 +93,3 @@
 .item.clearing {
   animation: itemClear 0.3s ease-in forwards;
 }
-
-/* Mobile: shrink items to fit small screens */
-@media (max-width: 480px) {
-  .item {
-    width: 26px;
-    height: 26px;
-    min-width: 26px;
-    min-height: 26px;
-  }
-
-  .itemLabel {
-    font-size: 12px;
-  }
-}

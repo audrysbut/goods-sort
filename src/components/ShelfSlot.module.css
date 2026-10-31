@@ -51,20 +51,3 @@
 .depthDot.filled {
   background: #4caf50;
 }
-
-/* Mobile: tighten spacing */
-@media (max-width: 480px) {
-  .slotContainer {
-    padding: 2px;
-    gap: 2px;
-  }
-
-  .cellsContainer {
-    gap: 2px;
-  }
-
-  .depthDot {
-    width: 4px;
-    height: 4px;
-  }
-}

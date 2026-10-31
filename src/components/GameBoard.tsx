@@ -14,6 +14,8 @@ export const GameBoardComponent: FunctionalComponent = () => {
     isGameWon,
     moveCount,
     canUndo,
+    exitingItems,
+    removeExitingItem,
     handleDragStart,
     handleDrop,
     handleDragEnd,
@@ -52,7 +54,12 @@ export const GameBoardComponent: FunctionalComponent = () => {
 
         <main class={styles.board} role="region" aria-label="Game board">
           {shelves.map((shelf) => (
-            <ShelfComponent key={shelf.id} shelf={shelf} />
+            <ShelfComponent
+              key={shelf.id}
+              shelf={shelf}
+              exitingItems={exitingItems}
+              onExitComplete={removeExitingItem}
+            />
           ))}
         </main>
 

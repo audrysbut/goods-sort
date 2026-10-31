@@ -1,7 +1,7 @@
 // src/components/ShelfSlot.tsx
 
 import { FunctionalComponent } from "preact";
-import type { SlotView } from "../hooks/useGameState";
+import type { SlotView, ExitingItem } from "../hooks/useGameState";
 import { SlotCellComponent } from "./SlotCell";
 import styles from "./ShelfSlot.module.css";
 
@@ -9,13 +9,20 @@ interface ShelfSlotProps {
   slot: SlotView;
   shelfId: string;
   slotIndex: number;
+  exitingItems?: ExitingItem[];
+  onExitComplete?: (id: string) => void;
 }
 
 export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
   slot,
   shelfId,
   slotIndex,
+  exitingItems,
+  onExitComplete,
 }) => {
+  const slotExiting = exitingItems?.filter(
+    (e) => e.shelfId === shelfId && e.slotIndex === slotIndex,
+  );
   return (
     <div
       class={styles.slotContainer}
@@ -31,6 +38,8 @@ export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
             slotIndex={slotIndex}
             cellIndex={cellIndex}
             hasMatch={slot.hasFrontMatch}
+            exitingItems={slotExiting?.filter((e) => e.cellIndex === cellIndex)}
+            onExitComplete={onExitComplete}
           />
         ))}
       </div>

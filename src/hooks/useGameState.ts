@@ -39,6 +39,14 @@ export interface ShelfView {
   slots: SlotView[];
 }
 
+export interface ExitingItem {
+  id: string;
+  item: Item;
+  shelfId: string;
+  slotIndex: number;
+  cellIndex: number;
+}
+
 const createCellView = (slot: ShelfSlot, cellIndex: number): CellView => ({
   frontItem: getFrontLayerItem(slot, cellIndex),
   nextItem: getItemAtDepth(slot, 1, cellIndex),
@@ -65,6 +73,7 @@ export const useGameState = (initialLevel: LevelData = level1) => {
   const [history, setHistory] = useState<Shelf[][]>(() => [
     cloneShelves(initialLevel.shelves),
   ]);
+  const [exitingItems, setExitingItems] = useState<ExitingItem[]>([]);
 
   const handleDragStart = useCallback((_source: DragSource) => {
     // Intentionally empty: the visual preview is driven by usePointerDrag.
@@ -101,6 +110,19 @@ export const useGameState = (initialLevel: LevelData = level1) => {
       setHistory((prev) => [...prev, result.shelves]);
       setMoveCount((prev) => prev + 1);
       if (result.isWon) setIsGameWon(true);
+
+      if (result.clearedItems && result.clearedItems.length > 0) {
+        const newExiting: ExitingItem[] = result.clearedItems.map(
+          (item, cellIndex) => ({
+            id: item.id,
+            item,
+            shelfId: targetShelfId,
+            slotIndex: targetSlotIndex,
+            cellIndex,
+          }),
+        );
+        setExitingItems((prev) => [...prev, ...newExiting]);
+      }
     },
     [shelves],
   );
@@ -115,7 +137,12 @@ export const useGameState = (initialLevel: LevelData = level1) => {
     setHistory([fresh]);
     setMoveCount(0);
     setIsGameWon(false);
+    setExitingItems([]);
   }, [initialLevel]);
+
+  const removeExitingItem = useCallback((id: string) => {
+    setExitingItems((prev) => prev.filter((e) => e.id !== id));
+  }, []);
 
   const undoMove = useCallback(() => {
     if (history.length <= 1) return;
@@ -125,6 +152,7 @@ export const useGameState = (initialLevel: LevelData = level1) => {
     setShelves(newHistory[newHistory.length - 1]);
     setMoveCount((prev) => Math.max(0, prev - 1));
     setIsGameWon(false);
+    setExitingItems([]);
   }, [history]);
 
   const shelvesView = useMemo<ShelfView[]>(
@@ -141,6 +169,8 @@ export const useGameState = (initialLevel: LevelData = level1) => {
     isGameWon,
     moveCount,
     canUndo: history.length > 1,
+    exitingItems,
+    removeExitingItem,
 
     handleDragStart,
     handleDrop,

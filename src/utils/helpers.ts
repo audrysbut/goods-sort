@@ -255,7 +255,7 @@ export const moveItem = (
 /**
  * Process a move and check for front layer matches/clears
  * Only checks target slot for new matches
- * Returns { shelves, isWon }
+ * Returns { shelves, isWon, clearedItems }
  */
 export const processMove = (
   shelves: Shelf[],
@@ -265,7 +265,7 @@ export const processMove = (
   toShelfId: string,
   toSlotIndex: number,
   toCellIndex: number,
-): { shelves: Shelf[]; isWon: boolean } | null => {
+): { shelves: Shelf[]; isWon: boolean; clearedItems: Item[] } | null => {
   // Perform the move
   const newShelves = moveItem(
     shelves,
@@ -280,20 +280,28 @@ export const processMove = (
 
   // Check for front layer match ONLY on the target slot
   const targetShelf = newShelves.find((s) => s.id === toShelfId);
-  if (!targetShelf) return { shelves: newShelves, isWon: checkWin(newShelves) };
+  if (!targetShelf)
+    return {
+      shelves: newShelves,
+      isWon: checkWin(newShelves),
+      clearedItems: [],
+    };
 
   const targetSlot = targetShelf.slots[toSlotIndex];
   const matchType = checkSlotFrontLayerMatch(targetSlot);
 
   let finalShelves = newShelves;
+  let clearedItems: Item[] = [];
 
   if (matchType) {
+    // Capture the cleared front-layer items before removing them
+    clearedItems = (targetSlot.layers[0]?.filter(Boolean) as Item[]) ?? [];
     // Clear the matched front layer on target slot only
     finalShelves = clearSlotFrontLayerMatch(newShelves, toShelfId, toSlotIndex);
   }
 
   const isWon = checkWin(finalShelves);
-  return { shelves: finalShelves, isWon };
+  return { shelves: finalShelves, isWon, clearedItems };
 };
 
 /**

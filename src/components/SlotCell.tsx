@@ -2,9 +2,9 @@
 
 import { FunctionalComponent } from "preact";
 import { useDragController } from "../hooks/usePointerDrag";
-import type { CellView } from "../hooks/useGameState";
+import type { CellView, ExitingItem } from "../hooks/useGameState";
 import { ItemComponent } from "./Item";
-import { AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import styles from "./SlotCell.module.css";
 
 interface SlotCellProps {
@@ -13,6 +13,8 @@ interface SlotCellProps {
   slotIndex: number;
   cellIndex: number;
   hasMatch: boolean;
+  exitingItems?: ExitingItem[];
+  onExitComplete?: (id: string) => void;
 }
 
 export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
@@ -21,6 +23,8 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
   slotIndex,
   cellIndex,
   hasMatch,
+  exitingItems,
+  onExitComplete,
 }) => {
   const { dragOverTarget } = useDragController();
 
@@ -61,18 +65,35 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
       tabIndex={canAccept ? 0 : -1}
     >
       <div class={styles.stack}>
-        <AnimatePresence>
-          {frontItem && (
+        {frontItem && (
+          <ItemComponent
+            key={frontItem.id}
+            item={frontItem}
+            shelfId={shelfId}
+            slotIndex={slotIndex}
+            cellIndex={cellIndex}
+            isTopItem={true}
+          />
+        )}
+        {exitingItems?.map((exiting) => (
+          <motion.div
+            key={`exiting-${exiting.id}`}
+            style={{ position: "absolute", top: 0, left: 0 }}
+            initial={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 0, scale: 0.5 }}
+            transition={{ duration: 0.25 }}
+            onAnimationComplete={() => onExitComplete?.(exiting.id)}
+          >
             <ItemComponent
-              key={frontItem.id}
-              item={frontItem}
-              shelfId={shelfId}
-              slotIndex={slotIndex}
-              cellIndex={cellIndex}
+              item={exiting.item}
+              shelfId={exiting.shelfId}
+              slotIndex={exiting.slotIndex}
+              cellIndex={exiting.cellIndex}
               isTopItem={true}
+              style={{ pointerEvents: "none" }}
             />
-          )}
-        </AnimatePresence>
+          </motion.div>
+        ))}
         {cell.nextItem && (
           <ItemComponent
             key={`next-${cell.nextItem.id}`}

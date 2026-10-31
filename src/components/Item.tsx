@@ -4,7 +4,6 @@ import { FunctionalComponent } from "preact";
 import type { Item, PointerEvent } from "../types/game";
 import { useDragController } from "../hooks/usePointerDrag";
 import { ITEM_COLORS, ITEM_LABELS } from "../types/game";
-import { motion } from "framer-motion";
 import styles from "./Item.module.css";
 
 interface ItemProps {
@@ -51,12 +50,9 @@ export const ItemComponent: FunctionalComponent<ItemProps> = ({
   };
 
   return (
-    <motion.div
-      className={baseClasses}
+    <div
+      class={baseClasses}
       onPointerDown={handlePointerDown}
-      initial={false}
-      exit={{ opacity: 0, scale: 0.5 }}
-      transition={{ duration: 0.2 }}
       style={{
         backgroundColor: color,
         opacity: isCurrentlyDragged ? 0.35 : isTopItem ? 1 : 0.3,
@@ -71,12 +67,12 @@ export const ItemComponent: FunctionalComponent<ItemProps> = ({
       aria-label={`Item: ${label} (${item.type})`}
       role={isTopItem ? "button" : "img"}
       aria-grabbed={isCurrentlyDragged}
-      tabIndex={isTopItem ? 0 : -1}
+      tabindex={isTopItem ? 0 : -1}
     >
       <span class={styles.itemLabel} aria-hidden="true">
         {label}
       </span>
-    </motion.div>
+    </div>
   );
 };
 

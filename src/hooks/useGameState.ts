@@ -9,7 +9,7 @@ import type {
   ShelfSlot,
   SlotDepth,
 } from "../types/game";
-import { level1 } from "../utils/levelData";
+import { generateRandomLevel } from "../utils/levelData";
 import {
   canAcceptItemInFrontLayer,
   checkSlotFrontLayerMatch,
@@ -64,14 +64,23 @@ const createSlotView = (slot: ShelfSlot): SlotView => ({
   depth: getSlotDepth(slot),
 });
 
-export const useGameState = (initialLevel: LevelData = level1) => {
+type LevelSource = LevelData | (() => LevelData);
+
+export const useGameState = (
+  initialLevel: LevelSource = generateRandomLevel,
+) => {
+  const resolveLevel = () =>
+    typeof initialLevel === "function" ? initialLevel() : initialLevel;
+
+  const initial = resolveLevel();
+
   const [shelves, setShelves] = useState<Shelf[]>(() =>
-    cloneShelves(initialLevel.shelves),
+    cloneShelves(initial.shelves),
   );
   const [isGameWon, setIsGameWon] = useState(false);
   const [moveCount, setMoveCount] = useState(0);
   const [history, setHistory] = useState<Shelf[][]>(() => [
-    cloneShelves(initialLevel.shelves),
+    cloneShelves(initial.shelves),
   ]);
   const [exitingItems, setExitingItems] = useState<ExitingItem[]>([]);
 
@@ -132,13 +141,14 @@ export const useGameState = (initialLevel: LevelData = level1) => {
   }, []);
 
   const resetGame = useCallback(() => {
-    const fresh = cloneShelves(initialLevel.shelves);
+    const freshLevel = resolveLevel();
+    const fresh = cloneShelves(freshLevel.shelves);
     setShelves(fresh);
     setHistory([fresh]);
     setMoveCount(0);
     setIsGameWon(false);
     setExitingItems([]);
-  }, [initialLevel]);
+  }, [resolveLevel]);
 
   const removeExitingItem = useCallback((id: string) => {
     setExitingItems((prev) => prev.filter((e) => e.id !== id));

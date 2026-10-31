@@ -6,6 +6,12 @@ export default defineConfig({
   // (https://<user>.github.io/goods-sort/) as well as locally.
   base: "./",
   plugins: [preact()],
+  resolve: {
+    alias: {
+      react: "preact/compat",
+      "react-dom": "preact/compat",
+    },
+  },
   server: {
     port: 4200,
   },

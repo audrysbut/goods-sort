@@ -40,8 +40,8 @@ const createShelf = (
 //   Slot 1: Depth 3 - Layer 0: [🍎, 🍌, 🍊] (mixed, no match)
 //                        Layer 1: [🍎, 🍌, 🍊] (mixed, no match)
 //                        Layer 2: [🍎, 🍌, 🍊] (mixed, no match)
-//   Slot 2: Depth 2 - Layer 0: [🍌, 🍊, 🍇] (mixed)
-//                        Layer 1: [🍌, 🍊, 🍇] (mixed)
+//   Slot 2: Depth 2 - Layer 0: [🍓, 🍊, 🍇] (mixed)
+//                        Layer 1: [🍓, 🍊, 🍇] (mixed)
 //   Slot 3: Depth 1 - Layer 0: [🍊, 🍇, 🍓] (mixed)
 // Shelf 2: Empty for maneuvering
 // Shelf 3: Empty for maneuvering
@@ -72,8 +72,8 @@ export const level1: LevelData = {
       ),
       createSlot(
         // Slot 2: Depth 2
-        createLayer([banana(), orange(), grape()]), // Layer 0: mixed
-        createLayer([banana(), orange(), grape()]), // Layer 1: mixed
+        createLayer([strawberry(), orange(), grape()]), // Layer 0: mixed
+        createLayer([strawberry(), orange(), grape()]), // Layer 1: mixed
       ),
       createSlot(
         // Slot 3: Depth 1

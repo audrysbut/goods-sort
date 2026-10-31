@@ -339,8 +339,7 @@ export const countItemTypes = (shelves: Shelf[]): Record<ItemType, number> => {
 export const isLevelSolvable = (level: LevelData): boolean => {
   const counts = countItemTypes(level.shelves);
 
-  const clearableTypes = Object.entries(counts).filter(
-    ([, count]) => count >= 3,
-  );
-  return clearableTypes.length > 0;
+  // Every item type must appear a multiple of 3 times (each match clears 3)
+  // for the level to be fully clearable. Types with a count of 0 are fine.
+  return Object.values(counts).every((count) => count % 3 === 0);
 };

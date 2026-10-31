@@ -4,6 +4,7 @@ import { FunctionalComponent } from "preact";
 import { useDragController } from "../hooks/usePointerDrag";
 import type { CellView } from "../hooks/useGameState";
 import { ItemComponent } from "./Item";
+import { AnimatePresence } from "framer-motion";
 import styles from "./SlotCell.module.css";
 
 interface SlotCellProps {
@@ -60,16 +61,18 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
       tabIndex={canAccept ? 0 : -1}
     >
       <div class={styles.stack}>
-        {frontItem && (
-          <ItemComponent
-            key={frontItem.id}
-            item={frontItem}
-            shelfId={shelfId}
-            slotIndex={slotIndex}
-            cellIndex={cellIndex}
-            isTopItem={true}
-          />
-        )}
+        <AnimatePresence>
+          {frontItem && (
+            <ItemComponent
+              key={frontItem.id}
+              item={frontItem}
+              shelfId={shelfId}
+              slotIndex={slotIndex}
+              cellIndex={cellIndex}
+              isTopItem={true}
+            />
+          )}
+        </AnimatePresence>
         {cell.nextItem && (
           <ItemComponent
             key={`next-${cell.nextItem.id}`}

@@ -51,15 +51,72 @@ export const useDragController = (): DragController => {
 /** Find the cell under a viewport coordinate. */
 const getTargetFromPoint = (x: number, y: number): DragTarget | null => {
   const element = document.elementFromPoint(x, y);
+
+  // Exact cell hit
   const cell = element?.closest("[data-cell-id]");
-  if (!cell) return null;
+  if (cell) {
+    const shelfId = cell.getAttribute("data-shelf-id");
+    const slotIndex = Number(cell.getAttribute("data-slot-index"));
+    const cellIndex = Number(cell.getAttribute("data-cell-index"));
 
-  const shelfId = cell.getAttribute("data-shelf-id");
-  const slotIndex = Number(cell.getAttribute("data-slot-index"));
-  const cellIndex = Number(cell.getAttribute("data-cell-index"));
+    if (!shelfId || Number.isNaN(slotIndex) || Number.isNaN(cellIndex))
+      return null;
 
-  if (!shelfId || Number.isNaN(slotIndex) || Number.isNaN(cellIndex))
+    const isEmpty = (cell.getAttribute("aria-label") || "").includes("empty");
+
+    // If the hit cell is empty, use it directly.
+    if (isEmpty) {
+      return { shelfId, slotIndex, cellIndex };
+    }
+
+    // Otherwise, if another cell in the same slot is empty, snap to the
+    // nearest empty cell in that slot instead of rejecting the drop.
+    const slotCells = Array.from(
+      document.querySelectorAll(
+        `[data-shelf-id="${shelfId}"][data-slot-index="${slotIndex}"][data-cell-id="true"]`,
+      ),
+    );
+    const emptyInSlot = slotCells.filter((c) =>
+      (c.getAttribute("aria-label") || "").includes("empty"),
+    );
+
+    if (emptyInSlot.length > 0) {
+      emptyInSlot.sort(
+        (a, b) =>
+          Math.abs(Number(a.getAttribute("data-cell-index")) - cellIndex) -
+          Math.abs(Number(b.getAttribute("data-cell-index")) - cellIndex),
+      );
+      const chosen = emptyInSlot[0];
+      const chosenIndex = Number(chosen.getAttribute("data-cell-index"));
+      if (!Number.isNaN(chosenIndex)) {
+        return { shelfId, slotIndex, cellIndex: chosenIndex };
+      }
+    }
+
     return null;
+  }
+
+  // Shelf-level drop: only allowed when the shelf has exactly one free spot
+  const shelf = element?.closest("[data-shelf-id]");
+  const shelfId = shelf?.getAttribute("data-shelf-id");
+  if (!shelfId) return null;
+
+  const cells = Array.from(
+    document.querySelectorAll(
+      `[data-shelf-id="${shelfId}"][data-cell-id="true"]`,
+    ),
+  );
+  const freeCells = cells.filter((c) =>
+    (c.getAttribute("aria-label") || "").includes("empty"),
+  );
+
+  if (freeCells.length !== 1) return null;
+
+  const freeCell = freeCells[0];
+  const slotIndex = Number(freeCell.getAttribute("data-slot-index"));
+  const cellIndex = Number(freeCell.getAttribute("data-cell-index"));
+  if (Number.isNaN(slotIndex) || Number.isNaN(cellIndex)) return null;
+
   return { shelfId, slotIndex, cellIndex };
 };
 

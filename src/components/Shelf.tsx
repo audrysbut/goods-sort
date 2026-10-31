@@ -20,6 +20,7 @@ export const ShelfComponent: FunctionalComponent<ShelfProps> = ({
     <div
       class={styles.shelf}
       role="list"
+      data-shelf-id={shelf.id}
       aria-label={`Shelf ${shelf.id.replace("shelf-", "")}`}
     >
       {shelf.slots.map((slot, slotIndex) => (

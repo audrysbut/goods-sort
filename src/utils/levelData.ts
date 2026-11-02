@@ -66,7 +66,7 @@ const makeItem = (type: ItemType): Item => ({
  * - 21 items total (7 triples), counts always multiples of 3.
  * - Every shelf contains at least one item (no empty shelves).
  */
-export const generateRandomLevel = (shelfCount: number = 10): LevelData => {
+export const generateRandomLevel = (shelfCount: number = 8): LevelData => {
   itemCounter = 0;
 
   // 7 triples -> 21 items, counts are multiples of 3.

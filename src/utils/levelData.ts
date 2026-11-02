@@ -53,6 +53,11 @@ const ITEM_TYPES: ItemType[] = [
   "orange",
   "grape",
   "strawberry",
+  "pear",
+  "lemon",
+  "watermelon",
+  "cherry",
+  "pineapple",
 ];
 
 let itemCounter = 0;

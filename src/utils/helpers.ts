@@ -325,6 +325,8 @@ export const countItemTypes = (shelves: Shelf[]): Record<ItemType, number> => {
     pear: 0,
     lemon: 0,
     watermelon: 0,
+    cherry: 0,
+    pineapple: 0,
   };
 
   for (const shelf of shelves) {

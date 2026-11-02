@@ -8,7 +8,9 @@ export type ItemType =
   | "strawberry"
   | "pear"
   | "lemon"
-  | "watermelon";
+  | "watermelon"
+  | "cherry"
+  | "pineapple";
 
 export interface Item {
   id: string;
@@ -62,6 +64,8 @@ export const ITEM_COLORS: Record<ItemType, string> = {
   pear: "#2ECC71", // Green
   lemon: "#F39C12", // Light Yellow/Orange
   watermelon: "#E91E63", // Deep Pink
+  cherry: "#C0392B", // Dark Red
+  pineapple: "#F4D03F", // Yellow
 };
 
 // Item type labels (for debugging/accessibility)
@@ -74,4 +78,6 @@ export const ITEM_LABELS: Record<ItemType, string> = {
   pear: "🍐",
   lemon: "🍋",
   watermelon: "🍉",
+  cherry: "🍒",
+  pineapple: "🍍",
 };

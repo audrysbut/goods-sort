@@ -166,7 +166,7 @@ export const validateLevel = (level: LevelData): boolean => {
     if (!shelf.slots || shelf.slots.length !== 2) return false;
     for (const slot of shelf.slots) {
       if (!Array.isArray(slot.layers)) return false;
-      if (slot.layers.length > 3) return false;
+      if (slot.layers.length > 4) return false;
       for (const layer of slot.layers) {
         if (!Array.isArray(layer) || layer.length !== 3) return false;
         for (const item of layer) {

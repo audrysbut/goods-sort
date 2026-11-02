@@ -49,7 +49,7 @@ export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
         class={styles.depthIndicator}
         aria-label={`Depth: ${slot.depth} layers`}
       >
-        {Array.from({ length: 3 }, (_, i) => (
+        {Array.from({ length: 4 }, (_, i) => (
           <span
             key={i}
             class={

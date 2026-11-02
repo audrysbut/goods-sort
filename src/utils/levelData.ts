@@ -72,8 +72,9 @@ const makeItem = (type: ItemType): Item => ({
 export const generateRandomLevel = (shelfCount: number = 8): LevelData => {
   itemCounter = 0;
 
-  // 7 triples -> 21 items, counts are multiples of 3.
-  const tripleTypes: ItemType[] = Array.from({ length: 7 }, () =>
+  // 11 triples -> 33 items, counts are multiples of 3.
+  // (Need at least 2 items per slot × 16 slots = 32 items)
+  const tripleTypes: ItemType[] = Array.from({ length: 11 }, () =>
     ITEM_TYPES[Math.floor(Math.random() * ITEM_TYPES.length)],
   );
 
@@ -91,14 +92,15 @@ export const generateRandomLevel = (shelfCount: number = 8): LevelData => {
 
   const totalSlots = shelfCount * 2;
 
-  // First pass: one item per slot to ensure every slot is populated.
+  // First pass: two items per slot to ensure every slot has at least 2.
   // Second pass: distribute remaining items randomly.
   const slotItems: Item[][] = Array.from({ length: totalSlots }, () => []);
 
   for (let i = 0; i < items.length; i++) {
-    if (i < totalSlots) {
-      // Ensure each slot gets at least one item.
-      slotItems[i].push(items[i]);
+    if (i < totalSlots * 2) {
+      // Ensure each slot gets at least two items.
+      const slotIdx = Math.floor(i / 2);
+      slotItems[slotIdx].push(items[i]);
     } else {
       // Distribute remaining items randomly.
       const randomSlot = Math.floor(Math.random() * totalSlots);

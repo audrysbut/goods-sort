@@ -1,6 +1,7 @@
 // src/components/Shelf.tsx
 
 import { FunctionalComponent } from "preact";
+import { memo } from "preact/compat";
 import type { ShelfView, ExitingItem } from "../hooks/useGameState";
 import { ShelfSlotComponent } from "./ShelfSlot";
 import styles from "./Shelf.module.css";
@@ -11,7 +12,7 @@ interface ShelfProps {
   onExitComplete?: (id: string) => void;
 }
 
-export const ShelfComponent: FunctionalComponent<ShelfProps> = ({
+const ShelfComponentBase: FunctionalComponent<ShelfProps> = ({
   shelf,
   exitingItems,
   onExitComplete,
@@ -37,4 +38,5 @@ export const ShelfComponent: FunctionalComponent<ShelfProps> = ({
   );
 };
 
+export const ShelfComponent = memo(ShelfComponentBase);
 export default ShelfComponent;

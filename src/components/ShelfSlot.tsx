@@ -1,6 +1,7 @@
 // src/components/ShelfSlot.tsx
 
 import { FunctionalComponent } from "preact";
+import { memo } from "preact/compat";
 import type { SlotView, ExitingItem } from "../hooks/useGameState";
 import { SlotCellComponent } from "./SlotCell";
 import styles from "./ShelfSlot.module.css";
@@ -13,7 +14,7 @@ interface ShelfSlotProps {
   onExitComplete?: (id: string) => void;
 }
 
-export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
+const ShelfSlotComponentBase: FunctionalComponent<ShelfSlotProps> = ({
   slot,
   shelfId,
   slotIndex,
@@ -62,4 +63,5 @@ export const ShelfSlotComponent: FunctionalComponent<ShelfSlotProps> = ({
   );
 };
 
+export const ShelfSlotComponent = memo(ShelfSlotComponentBase);
 export default ShelfSlotComponent;

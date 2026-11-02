@@ -48,9 +48,18 @@ export const useDragController = (): DragController => {
   return controller;
 };
 
+// Cache the last element and target to avoid repeated DOM work during a drag.
+let lastElement: Element | null = null;
+let lastTarget: DragTarget | null = null;
+
 /** Find the cell under a viewport coordinate. */
 const getTargetFromPoint = (x: number, y: number): DragTarget | null => {
   const element = document.elementFromPoint(x, y);
+
+  if (element === lastElement) {
+    return lastTarget;
+  }
+  lastElement = element;
 
   // Exact cell hit
   const cell = element?.closest("[data-cell-id]");
@@ -59,14 +68,17 @@ const getTargetFromPoint = (x: number, y: number): DragTarget | null => {
     const slotIndex = Number(cell.getAttribute("data-slot-index"));
     const cellIndex = Number(cell.getAttribute("data-cell-index"));
 
-    if (!shelfId || Number.isNaN(slotIndex) || Number.isNaN(cellIndex))
+    if (!shelfId || Number.isNaN(slotIndex) || Number.isNaN(cellIndex)) {
+      lastTarget = null;
       return null;
+    }
 
     const isEmpty = (cell.getAttribute("aria-label") || "").includes("empty");
 
     // If the hit cell is empty, use it directly.
     if (isEmpty) {
-      return { shelfId, slotIndex, cellIndex };
+      lastTarget = { shelfId, slotIndex, cellIndex };
+      return lastTarget;
     }
 
     // Otherwise, if another cell in the same slot is empty, snap to the
@@ -89,17 +101,22 @@ const getTargetFromPoint = (x: number, y: number): DragTarget | null => {
       const chosen = emptyInSlot[0];
       const chosenIndex = Number(chosen.getAttribute("data-cell-index"));
       if (!Number.isNaN(chosenIndex)) {
-        return { shelfId, slotIndex, cellIndex: chosenIndex };
+        lastTarget = { shelfId, slotIndex, cellIndex: chosenIndex };
+        return lastTarget;
       }
     }
 
+    lastTarget = null;
     return null;
   }
 
   // Shelf-level drop: only allowed when the shelf has exactly one free spot
   const shelf = element?.closest("[data-shelf-id]");
   const shelfId = shelf?.getAttribute("data-shelf-id");
-  if (!shelfId) return null;
+  if (!shelfId) {
+    lastTarget = null;
+    return null;
+  }
 
   const cells = Array.from(
     document.querySelectorAll(
@@ -110,14 +127,21 @@ const getTargetFromPoint = (x: number, y: number): DragTarget | null => {
     (c.getAttribute("aria-label") || "").includes("empty"),
   );
 
-  if (freeCells.length !== 1) return null;
+  if (freeCells.length !== 1) {
+    lastTarget = null;
+    return null;
+  }
 
   const freeCell = freeCells[0];
   const slotIndex = Number(freeCell.getAttribute("data-slot-index"));
   const cellIndex = Number(freeCell.getAttribute("data-cell-index"));
-  if (Number.isNaN(slotIndex) || Number.isNaN(cellIndex)) return null;
+  if (Number.isNaN(slotIndex) || Number.isNaN(cellIndex)) {
+    lastTarget = null;
+    return null;
+  }
 
-  return { shelfId, slotIndex, cellIndex };
+  lastTarget = { shelfId, slotIndex, cellIndex };
+  return lastTarget;
 };
 
 const isSameCell = (source: DragSource, target: DragTarget): boolean =>
@@ -147,6 +171,8 @@ export const usePointerDrag = (
 
   const activeRef = useRef(false);
   const sourceRef = useRef<DragSource | null>(null);
+  const rafIdRef = useRef<number | null>(null);
+  const pendingMoveRef = useRef<PointerEvent | null>(null);
 
   // Keep references to the installed listeners so they can be removed
   // reliably even if the component re-renders mid-drag.
@@ -156,6 +182,11 @@ export const usePointerDrag = (
   const blurHandlerRef = useRef<(() => void) | null>(null);
 
   const removeListeners = useCallback(() => {
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+    pendingMoveRef.current = null;
     if (moveHandlerRef.current) {
       document.removeEventListener("pointermove", moveHandlerRef.current);
       moveHandlerRef.current = null;
@@ -231,8 +262,26 @@ export const usePointerDrag = (
 
       const handleMove = (ev: PointerEvent) => {
         if (!activeRef.current) return;
-        setGhostPosition({ x: ev.clientX, y: ev.clientY });
-        setDragOverTarget(getTargetFromPoint(ev.clientX, ev.clientY));
+        pendingMoveRef.current = ev;
+        if (rafIdRef.current === null) {
+          rafIdRef.current = requestAnimationFrame(() => {
+            rafIdRef.current = null;
+            const pending = pendingMoveRef.current;
+            if (!pending || !activeRef.current) return;
+            setGhostPosition({ x: pending.clientX, y: pending.clientY });
+            const target = getTargetFromPoint(pending.clientX, pending.clientY);
+            setDragOverTarget((prev) => {
+              if (
+                prev?.shelfId === target?.shelfId &&
+                prev?.slotIndex === target?.slotIndex &&
+                prev?.cellIndex === target?.cellIndex
+              ) {
+                return prev;
+              }
+              return target;
+            });
+          });
+        }
       };
 
       const handleUp = (ev: PointerEvent) => {

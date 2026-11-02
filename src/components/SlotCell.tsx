@@ -1,6 +1,7 @@
 // src/components/SlotCell.tsx
 
 import { FunctionalComponent } from "preact";
+import { memo } from "preact/compat";
 import { useDragController } from "../hooks/usePointerDrag";
 import type { CellView, ExitingItem } from "../hooks/useGameState";
 import { ItemComponent } from "./Item";
@@ -17,7 +18,7 @@ interface SlotCellProps {
   onExitComplete?: (id: string) => void;
 }
 
-export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
+const SlotCellComponentBase: FunctionalComponent<SlotCellProps> = ({
   cell,
   shelfId,
   slotIndex,
@@ -135,4 +136,5 @@ export const SlotCellComponent: FunctionalComponent<SlotCellProps> = ({
   );
 };
 
+export const SlotCellComponent = memo(SlotCellComponentBase);
 export default SlotCellComponent;

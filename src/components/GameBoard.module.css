@@ -94,7 +94,7 @@
 .board {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: 16px;
+  gap: 8px;
   width: 100%;
   align-items: start;
   justify-items: start;

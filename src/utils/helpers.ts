@@ -308,7 +308,9 @@ export const processMove = (
  */
 export const checkWin = (shelves: Shelf[]): boolean => {
   return shelves.every((shelf) =>
-    shelf.slots.every((slot) => slot.layers.length === 0),
+    shelf.slots.every((slot) =>
+      slot.layers.every((layer) => layer.every((cell) => cell === null)),
+    ),
   );
 };
 

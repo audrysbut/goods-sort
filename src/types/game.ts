@@ -21,10 +21,10 @@ export interface Item {
 // Each layer has 3 positions (one per cell), can be empty (null) or have an item
 export type SlotDepth = [Item | null, Item | null, Item | null];
 
-// ShelfSlot = vertical stack of depth layers (max 4 layers)
+// ShelfSlot = vertical stack of depth layers (max 6 layers)
 // All 3 cells share the same depth
 export interface ShelfSlot {
-  layers: SlotDepth[]; // Max 4 layers deep
+  layers: SlotDepth[]; // Max 6 layers deep
 }
 
 export interface Shelf {

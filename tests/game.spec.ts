@@ -6,17 +6,17 @@ test("game loads and renders shelves", async ({ page }) => {
   // Check title
   await expect(page.locator("h1")).toContainText("Goods Sort");
 
-  // Check shelves are rendered (3 shelves with role="list" and aria-label starting with "Shelf")
+  // Check shelves are rendered (10 shelves with role="list" and aria-label starting with "Shelf")
   const shelves = page.locator('[role="list"][aria-label^="Shelf"]');
-  await expect(shelves).toHaveCount(3);
+  await expect(shelves).toHaveCount(10);
 
-  // Check each shelf has 3 slots (role="list" with aria-label starting with "Slot")
+  // Check each shelf has 2 slots (role="list" with aria-label starting with "Slot")
   const slots = page.locator('[role="list"][aria-label^="Slot"]');
-  await expect(slots).toHaveCount(9);
+  await expect(slots).toHaveCount(20);
 
   // Check cells are rendered (role="button" with aria-label starting with "Cell")
   const cells = page.locator('[role="button"][aria-label^="Cell"]');
-  await expect(cells).toHaveCount(27);
+  await expect(cells).toHaveCount(60);
 
   // Check some items are present
   const items = page.locator('[role="button"][aria-label^="Item:"]');

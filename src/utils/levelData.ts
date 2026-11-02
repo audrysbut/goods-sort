@@ -24,10 +24,7 @@ const createSlot = (...layers: SlotDepth[]): ShelfSlot => ({
 });
 
 // Helper to create a shelf
-const createShelf = (
-  id: string,
-  slots: [ShelfSlot, ShelfSlot, ShelfSlot],
-): Shelf => ({
+const createShelf = (id: string, slots: [ShelfSlot, ShelfSlot]): Shelf => ({
   id,
   slots,
 });
@@ -41,7 +38,6 @@ const createEmptySlot = (): ShelfSlot => ({
 export const createEmptyLevel = (shelfCount: number = 3): LevelData => ({
   shelves: Array.from({ length: shelfCount }, (_, i) =>
     createShelf(`shelf-${i + 1}`, [
-      createEmptySlot(),
       createEmptySlot(),
       createEmptySlot(),
     ]),
@@ -65,18 +61,17 @@ const makeItem = (type: ItemType): Item => ({
 });
 
 /**
- * Generate a random but solvable level.
+ * Generate a random but solvable level with 10 shelves.
  *
- * - 18 items total, counts always multiples of 3.
- * - Every shelf and every slot contains items (no completely empty shelf/slot).
- * - Each slot keeps one empty cell for moves.
+ * - 21 items total (7 triples), counts always multiples of 3.
+ * - Every shelf contains at least one item (no empty shelves).
  */
-export const generateRandomLevel = (shelfCount: number = 3): LevelData => {
+export const generateRandomLevel = (shelfCount: number = 10): LevelData => {
   itemCounter = 0;
 
-  // 6 triples -> 18 items, counts are multiples of 3.
+  // 7 triples -> 21 items, counts are multiples of 3.
   const tripleTypes: ItemType[] = Array.from(
-    { length: 6 },
+    { length: 7 },
     () => ITEM_TYPES[Math.floor(Math.random() * ITEM_TYPES.length)],
   );
 
@@ -92,27 +87,45 @@ export const generateRandomLevel = (shelfCount: number = 3): LevelData => {
     [items[i], items[j]] = [items[j], items[i]];
   }
 
-  const slotCount = shelfCount * 3;
-  const itemsPerSlot = Math.floor(items.length / slotCount); // 2
+  // Ensure every shelf gets at least one item.
+  const shelfItems: Item[][] = Array.from({ length: shelfCount }, () => []);
+  for (let i = 0; i < shelfCount; i++) {
+    shelfItems[i].push(items[i]);
+  }
+  for (let i = shelfCount; i < items.length; i++) {
+    const shelf = Math.floor(Math.random() * shelfCount);
+    shelfItems[shelf].push(items[i]);
+  }
 
-  const shelves: Shelf[] = Array.from({ length: shelfCount }, (_, shelfIdx) => {
-    const slots = [0, 1, 2].map((slotOffset) => {
-      const slotIndex = shelfIdx * 3 + slotOffset;
-      const slotItems = items.slice(
-        slotIndex * itemsPerSlot,
-        slotIndex * itemsPerSlot + itemsPerSlot,
-      );
+  const shelves: Shelf[] = shelfItems.map((sItems, shelfIdx) => {
+    const slots = [createEmptySlot(), createEmptySlot()];
 
-      // Place the items in random cells, leaving the rest empty.
-      const layer: (Item | null)[] = [null, null, null];
-      const positions = [0, 1, 2].sort(() => Math.random() - 0.5);
-      slotItems.forEach((item, idx) => {
-        layer[positions[idx]] = item;
-      });
+    // Place items into distinct random cells of this shelf.
+    const cells: { slot: number; cell: number }[] = [];
+    for (let slot = 0; slot < 2; slot++) {
+      for (let cell = 0; cell < 3; cell++) {
+        cells.push({ slot, cell });
+      }
+    }
+    for (let i = cells.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [cells[i], cells[j]] = [cells[j], cells[i]];
+    }
 
-      return createSlot(createLayer(layer));
-    }) as [ShelfSlot, ShelfSlot, ShelfSlot];
-    return createShelf(`shelf-${shelfIdx + 1}`, slots);
+    sItems.forEach((item, idx) => {
+      const { slot, cell } = cells[idx % cells.length];
+      if (!slots[slot].layers.length) {
+        slots[slot].layers.push([null, null, null]);
+      }
+      (slots[slot].layers[0] as (Item | null)[])[cell] = item;
+    });
+
+    const shelfSlots = slots.map((sl) => {
+      if (!sl.layers.length) return createEmptySlot();
+      return createSlot(createLayer(sl.layers[0] as (Item | null)[]));
+    }) as [ShelfSlot, ShelfSlot];
+
+    return createShelf(`shelf-${shelfIdx + 1}`, shelfSlots);
   });
 
   return { shelves };
@@ -126,10 +139,10 @@ export const validateLevel = (level: LevelData): boolean => {
   if (!level.shelves || level.shelves.length === 0) return false;
 
   for (const shelf of level.shelves) {
-    if (!shelf.slots || shelf.slots.length !== 3) return false;
+    if (!shelf.slots || shelf.slots.length !== 2) return false;
     for (const slot of shelf.slots) {
       if (!Array.isArray(slot.layers)) return false;
-      if (slot.layers.length > 3) return false; // Max 3 depth layers
+      if (slot.layers.length > 3) return false;
       for (const layer of slot.layers) {
         if (!Array.isArray(layer) || layer.length !== 3) return false;
         for (const item of layer) {

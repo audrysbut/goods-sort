@@ -16,7 +16,7 @@
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  max-width: 600px;
+  max-width: 100%;
   padding: 0 8px;
 }
 
@@ -92,19 +92,19 @@
 }
 
 .board {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
   gap: 16px;
-  align-items: center;
   width: 100%;
-  max-width: 600px;
+  align-items: start;
+  justify-items: start;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
 
 .footer {
   width: 100%;
-  max-width: 600px;
+  max-width: 100%;
   padding: 0 8px;
 }
 

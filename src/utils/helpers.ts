@@ -33,8 +33,7 @@ export const cloneShelves = (shelves: Shelf[]): Shelf[] => {
     slots: [
       { layers: shelf.slots[0].layers.map((layer) => [...layer]) } as ShelfSlot,
       { layers: shelf.slots[1].layers.map((layer) => [...layer]) } as ShelfSlot,
-      { layers: shelf.slots[2].layers.map((layer) => [...layer]) } as ShelfSlot,
-    ] as [ShelfSlot, ShelfSlot, ShelfSlot],
+    ] as [ShelfSlot, ShelfSlot],
   }));
 };
 
@@ -68,7 +67,7 @@ export const findSlotFrontLayerMatches = (
   }> = [];
 
   for (const shelf of shelves) {
-    for (let slotIdx = 0; slotIdx < 3; slotIdx++) {
+    for (let slotIdx = 0; slotIdx < 2; slotIdx++) {
       const matchType = checkSlotFrontLayerMatch(shelf.slots[slotIdx]);
       if (matchType) {
         matches.push({

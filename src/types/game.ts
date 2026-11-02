@@ -27,7 +27,7 @@ export interface ShelfSlot {
 
 export interface Shelf {
   id: string;
-  slots: [ShelfSlot, ShelfSlot, ShelfSlot]; // Exactly 3 slots
+  slots: [ShelfSlot, ShelfSlot]; // Exactly 2 slots
 }
 
 export interface GameState {
